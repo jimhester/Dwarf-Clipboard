@@ -30,7 +30,9 @@
 
 #include "dfCopyPaste.h"
 #include "dfCopyPastePng.h"
+#include "ui_dfCopyPaste.h"
 #include <QxtGlobalShortcut>
+#include <QTextStream>
 #define DFHACK_WANT_MISCUTILS
 #define DFHACK_WANT_TILETYPES
 #include "DFHack.h"
@@ -38,47 +40,122 @@
 
 dfCopyPaste::dfCopyPaste()
 {
- //   createIconGroupBox();
- //   createMessageGroupBox();
 
-//    iconLabel->setMinimumWidth(durationLabel->sizeHint().width());
-
+    setupUi(this);
     createActions();
     createTrayIcon();
+    connectToDF();
 
-  //  connect(showMessageButton, SIGNAL(clicked()), this, SLOT(showMessage()));
-  /*  connect(showIconCheckBox, SIGNAL(toggled(bool)),
-            trayIcon, SLOT(setVisible(bool)));
-    connect(iconComboBox, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(setIcon(int)));
-            */
-   // connect(trayIcon, SIGNAL(messageClicked()), this, SLOT(messageClicked()));
+    input_delay = 100;
+    thumbnail_size = 64;
+
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
 
-    QxtGlobalShortcut* copy_shortcut = new QxtGlobalShortcut(this);
+    copy_shortcut = new QxtGlobalShortcut(this);
     connect(copy_shortcut, SIGNAL(activated()), this, SLOT(copy()));
     copy_shortcut->setShortcut(QKeySequence("Ctrl+Shift+C"));
 
-    QxtGlobalShortcut* paste_shortcut = new QxtGlobalShortcut(this);
-    connect(paste_shortcut, SIGNAL(activated()), this, SLOT(paste()));
-    paste_shortcut->setShortcut(QKeySequence("Ctrl+Shift+D"));
-   
-    
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    //mainLayout->addWidget(iconGroupBox);
-    //mainLayout->addWidget(messageGroupBox);
-    setLayout(mainLayout);
+    paste_designation_shortcut = new QxtGlobalShortcut(this);
+    connect(paste_designation_shortcut, SIGNAL(activated()), this, SLOT(paste_designations()));
+    paste_designation_shortcut->setShortcut(QKeySequence("Ctrl+Shift+D"));
 
-  //  iconComboBox->setCurrentIndex(1);
+    QShortcut* delete_shortcut = new QShortcut(this);
+    delete_shortcut->setKey(QKeySequence(QKeySequence::Delete));
+    connect(delete_shortcut, SIGNAL(activated()),this,SLOT(delete_selected()));
+
+    load_config();
+
+    connect(pushButton_recent_save, SIGNAL(clicked()),this,SLOT(save()));
+    connect(pushButton_recent_load, SIGNAL(clicked()),this,SLOT(load()));
+    connect(pushButton_recent_paste_designations, SIGNAL(clicked()),this,SLOT(paste_designations()));
+
+    connect(copyShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(copy_shortcut_changed()));
+    connect(pasteDesignationShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(paste_designation_shortcut_changed()));
+    connect(thumbnailSizeLineEdit,SIGNAL(editingFinished()),this,SLOT(thumbnail_size_changed()));
+    connect(inputDelayMsLineEdit,SIGNAL(editingFinished()),this,SLOT(input_delay_changed()));
+    
+    recentModel = new dfCopyModel(DF,&recentCopyObjs);
+    recentModel->setIconSize(QSize(thumbnail_size,thumbnail_size));
+ //   libraryModel = new dfCopyModel(&libraryCopyObjs);
+    tableView_recent->setModel(recentModel);
+    setup_views();
+    tableView_recent->verticalHeader()->setDefaultSectionSize(thumbnail_size+1);
+    tableView_recent->horizontalHeader()->setDefaultSectionSize(thumbnail_size+7);
+    copyShortcutLineEdit->setText(copy_shortcut->shortcut().toString());
+    pasteDesignationShortcutLineEdit->setText(paste_designation_shortcut->shortcut().toString());
+    thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnail_size));
+    inputDelayMsLineEdit->setText(QString("%1").arg(input_delay));
+
     trayIcon->setIcon(QIcon(":/images/dfCopyPaste.png"));
     trayIcon->show();
 
-    setWindowTitle(tr("Systray"));
-    resize(400, 300);
-    connectToDF();
-    copyObj = new dfCopyObj();
-    copyObj->setDF(DF);
+    setWindowTitle(tr("dfCopyPaste"));
+    prevCursor.x = -30000;
+}
+void dfCopyPaste::setup_views()
+{
+    tableView_recent->setColumnWidth(0,thumbnail_size);
+    tableView_recent->setMinimumWidth(thumbnail_size);
+    tableView_recent->resizeColumnToContents(0);
+    tableView_recent->resizeRowsToContents();
+}
+void dfCopyPaste::paste_designation_shortcut_changed()
+{
+    QKeySequence seq(pasteDesignationShortcutLineEdit->text());
+    if(!seq.isEmpty()){
+        paste_designation_shortcut->setShortcut(seq);
+    }
+}
+void dfCopyPaste::copy_shortcut_changed()
+{
+    QKeySequence seq(copyShortcutLineEdit->text());
+    if(!seq.isEmpty()){
+        copy_shortcut->setShortcut(seq);
+    }
+}
+void dfCopyPaste::input_delay_changed()
+{
+    input_delay = inputDelayMsLineEdit->text().toInt();
+    dfCopyPastePng::delay = input_delay;
+}
+void dfCopyPaste::thumbnail_size_changed()
+{
+    thumbnail_size = thumbnailSizeLineEdit->text().toInt();
+    recentModel->setIconSize(QSize(thumbnail_size,thumbnail_size));
+    setup_views();
+}
+void dfCopyPaste::delete_selected()
+{
+    QModelIndex idx = tableView_recent->currentIndex();
+    recentModel->removeRow(idx.row());
+    tableView_recent->selectRow(idx.row());
+}
+void dfCopyPaste::save()
+{
+    QModelIndex idx = tableView_recent->currentIndex();
+    if(idx.isValid()){
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                            ".",
+                            tr("Png Images (*.png)"));
+        QImage img = recentCopyObjs.at(idx.row()).getImage();
+        img.save(fileName);
+    }
+}
+void dfCopyPaste::load()
+{
+    QImage img;
+    QString fileName;
+    foreach(fileName,QFileDialog::getOpenFileNames(this, tr("Open File"),
+                            ".",
+                            tr("Png Images (*.png)")))
+    {
+
+        img.load(fileName);
+        dfCopyObj copy(img,DF);
+        recentModel->prependData(copy);
+    }
+    setup_views();
 }
 void dfCopyPaste::connectToDF()
 {
@@ -95,6 +172,7 @@ void dfCopyPaste::connectToDF()
     }
     if(ok){
         Pos = DF->getPosition();
+        Pos->Start();
         DF->Resume();
     }
 }
@@ -155,42 +233,37 @@ void dfCopyPaste::showMessage()
 void dfCopyPaste::copy() //this will be ugly, I apoligize to my future self
 {
     cursorIdx tempCursor;
-    if(copyObj->getValid() == 0){
+    if(prevCursor.x == -30000){
         if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){
             trayIcon->showMessage(tr("df Copy"),tr("Please place the df cursor"));
         }
-        else{
-            copyObj->addPos(tempCursor);
+        else
+        {
+            prevCursor = tempCursor;
             trayIcon->showMessage(tr("df Copy"),tr("df Copy Started, place cursor at second point of region and copy again"));
         }
     }
-    else{
-        if(copyObj->getValid() == 1){
-            if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){
+    else
+    {
+        if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z))
+        {
                 trayIcon->showMessage(tr("df Copy"),tr("Please place the df cursor"));
-            }
-            else{
-                copyObj->addPos(tempCursor);
-                trayIcon->showMessage(tr("df Copy"),tr("Region Selected, press CTRL-SHIFT-D to paste, or CTRL-SHIFT-C to start a new copy"));
-                dfCopyPastePng testPng(DF);
-                QImage pictures = testPng.getPicture(copyObj->getRange())[0];
-                QLabel * test = new QLabel();
-                test->setPixmap(QPixmap::fromImage(pictures));
-                this->layout()->addWidget(test);
-            }
         }
-        else{ // both values set, restart the copy
-            copyObj->clear();
-            copy();
-            return;
+        else
+        {
+            trayIcon->showMessage(tr("df Copy"),tr("Region Selected, press %1 to paste or %2 to start a new copy").arg(paste_designation_shortcut->shortcut().toString()).arg(copy_shortcut->shortcut().toString()));
+            dfCopyObj currentCopy(DF,prevCursor,tempCursor);
+            recentModel->prependData(currentCopy);
+            tableView_recent->selectRow(0);
+            setup_views();
+            prevCursor.x = -30000;
         }
     }
-    return;
 }
 
-void dfCopyPaste::paste()
+void dfCopyPaste::paste_designations()
 {
-    if(copyObj->getValid() == 2){
+    if(recentCopyObjs.size() > 0){
         cursorIdx tempCursor;
         if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){
                 trayIcon->showMessage(tr("df Paste"),tr("Please place the df cursor"));
@@ -198,7 +271,10 @@ void dfCopyPaste::paste()
             else{
                 trayIcon->showMessage( tr("df Paste"),
                          tr("Pasting!"));
-                copyObj->paste(tempCursor);
+                QModelIndex idx = tableView_recent->currentIndex();
+                if(idx.isValid()){
+                    recentCopyObjs[idx.row()].paste(tempCursor);
+                }
             }
     }
 }
@@ -229,67 +305,6 @@ void dfCopyPaste::createIconGroupBox()
     iconGroupBox->setLayout(iconLayout);
 }
 
-void dfCopyPaste::createMessageGroupBox()
-{
-    messageGroupBox = new QGroupBox(tr("Balloon Message"));
-
-    typeLabel = new QLabel(tr("Type:"));
-
-
-
-    typeComboBox = new QComboBox;
-    typeComboBox->addItem(tr("None"), QSystemTrayIcon::NoIcon);
-    typeComboBox->addItem(style()->standardIcon(
-            QStyle::SP_MessageBoxInformation), tr("Information"),
-            QSystemTrayIcon::Information);
-    typeComboBox->addItem(style()->standardIcon(
-            QStyle::SP_MessageBoxWarning), tr("Warning"),
-            QSystemTrayIcon::Warning);
-    typeComboBox->addItem(style()->standardIcon(
-            QStyle::SP_MessageBoxCritical), tr("Critical"),
-            QSystemTrayIcon::Critical);
-    typeComboBox->setCurrentIndex(1);
-
-    durationLabel = new QLabel(tr("Duration:"));
-
-    durationSpinBox = new QSpinBox;
-    durationSpinBox->setRange(5, 60);
-    durationSpinBox->setSuffix(" s");
-    durationSpinBox->setValue(15);
-
-    durationWarningLabel = new QLabel(tr("(some systems might ignore this "
-                                         "hint)"));
-    durationWarningLabel->setIndent(10);
-
-    titleLabel = new QLabel(tr("Title:"));
-
-    titleEdit = new QLineEdit(tr("Cannot connect to network"));
-
-    bodyLabel = new QLabel(tr("Body:"));
-
-    bodyEdit = new QTextEdit;
-    bodyEdit->setPlainText(tr("Don't believe me. Honestly, I don't have a "
-                              "clue.\nClick this balloon for details."));
-
-    showMessageButton = new QPushButton(tr("Show Message"));
-    showMessageButton->setDefault(true);
-
-    QGridLayout *messageLayout = new QGridLayout;
-    messageLayout->addWidget(typeLabel, 0, 0);
-    messageLayout->addWidget(typeComboBox, 0, 1, 1, 2);
-    messageLayout->addWidget(durationLabel, 1, 0);
-    messageLayout->addWidget(durationSpinBox, 1, 1);
-    messageLayout->addWidget(durationWarningLabel, 1, 2, 1, 3);
-    messageLayout->addWidget(titleLabel, 2, 0);
-    messageLayout->addWidget(titleEdit, 2, 1, 1, 4);
-    messageLayout->addWidget(bodyLabel, 3, 0);
-    messageLayout->addWidget(bodyEdit, 3, 1, 2, 4);
-    messageLayout->addWidget(showMessageButton, 5, 4);
-    messageLayout->setColumnStretch(3, 1);
-    messageLayout->setRowStretch(4, 1);
-    messageGroupBox->setLayout(messageLayout);
-}
-
 void dfCopyPaste::createActions()
 {
     minimizeAction = new QAction(tr("Mi&nimize"), this);
@@ -302,9 +317,51 @@ void dfCopyPaste::createActions()
     connect(restoreAction, SIGNAL(triggered()), this, SLOT(showNormal()));
 
     quitAction = new QAction(tr("&Quit"), this);
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(quitAction, SIGNAL(triggered()), this, SLOT(save_and_quit()));
+}
+void dfCopyPaste::load_config()
+{
+    QFile inFile("config.ini");
+    if(inFile.exists())
+    {
+        inFile.open(QIODevice::ReadOnly);
+        QTextStream in(&inFile);
+        while(!in.atEnd()){
+            QStringList list = in.readLine().split(':');
+            if (list.at(0) == "copy")
+            {
+                copy_shortcut->setShortcut(QKeySequence(list.at(1)));
+            }
+            else if (list.at(0) == "paste_designation")
+            {
+                paste_designation_shortcut->setShortcut(QKeySequence(list.at(1)));
+            }
+            else if (list.at(0) == "thumbnail_size")
+            {
+                thumbnail_size = list.at(1).toInt();
+            }
+            else if (list.at(0) == "input_delay")
+            {
+                input_delay = list.at(1).toInt();
+            }
+        }
+        inFile.close();
+    }
 }
 
+    
+void dfCopyPaste::save_and_quit()
+{
+    QFile outFile("config.ini");
+    outFile.open(QIODevice::WriteOnly);
+    QTextStream out(&outFile);
+    out << "copy:" << copy_shortcut->shortcut().toString() << '\n';
+    out << "paste_designation:" << paste_designation_shortcut->shortcut().toString() << '\n';
+    out << "thumbnail_size:" << thumbnail_size << '\n';
+    out << "input_delay:" << input_delay << '\n';
+    outFile.close();
+    qApp->quit();
+}
 void dfCopyPaste::createTrayIcon()
 {
     trayIconMenu = new QMenu(this);

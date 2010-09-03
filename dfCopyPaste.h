@@ -5,7 +5,13 @@
 #include <QWidget>
 #include "common.h"
 #include "dfCopyObj.h"
+#include "dfCopyModel.h"
+#include "dfCopyDelegate.h"
+#include "ui_dfCopyPaste.h"
 
+class Ui_TabWidget;
+class QListView;
+class QTableView;
 class QAction;
 class QCheckBox;
 class QComboBox;
@@ -16,6 +22,7 @@ class QMenu;
 class QPushButton;
 class QSpinBox;
 class QTextEdit;
+class QxtGlobalShortcut;
 
 namespace DFHack{
     class ContextManager;
@@ -25,7 +32,7 @@ namespace DFHack{
     class Maps;
 }
 
-class dfCopyPaste : public QWidget
+class dfCopyPaste : public QTabWidget, private Ui::TabWidget
 {
     Q_OBJECT
 
@@ -43,15 +50,25 @@ private slots:
     void showMessage();
     void messageClicked();
     void copy();
-    void paste();
-
+    void paste_designations();
+    void save();
+    void load();
+    void delete_selected();
+    void copy_shortcut_changed();
+    void paste_designation_shortcut_changed();
+    void save_and_quit();
+    void input_delay_changed();
+    void thumbnail_size_changed();
 private:
     void createIconGroupBox();
     void createMessageGroupBox();
     void createActions();
     void createTrayIcon();
+    void load_config();
+    void setup_views();
 
-    //DFSTuff
+
+    //DF Stuff
     void connectToDF();
 
     QGroupBox *iconGroupBox;
@@ -79,8 +96,13 @@ private:
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
 
-    QShortcut * copy_shortcut;
-    QShortcut * paste_shortcut;
+    QxtGlobalShortcut * copy_shortcut;
+    QxtGlobalShortcut * paste_designation_shortcut;
+    int input_delay;
+    int thumbnail_size;
+
+    Ui_TabWidget * testWindow;
+    dfCopyModel * recentModel;
 
     //DF things
     DFHack::ContextManager *DFMgr;
@@ -90,9 +112,11 @@ private:
     DFHack::Maps *Maps;
 
     //Copy things
-    dfCopyObj *copyObj;
-    
+    QList<dfCopyObj> recentCopyObjs;
+    cursorIdx prevCursor;
+    QList<dfCopyObj> copyLibrary;
     cursorIdx c3;
+
 };
 
 #endif

@@ -1,12 +1,14 @@
-SOURCES += dfCopyPaste.cpp dfCopyObj.cpp dfCopyPastePng.cpp dfLocationIterator.cpp main.cpp
+SOURCES += dfCopyModel.cpp dfCopyObj.cpp dfCopyPaste.cpp dfCopyPastePng.cpp dfLocationIterator.cpp main.cpp dfCopyPasteView.cpp
 
-HEADERS += dfCopyPaste.h dfCopyObj.h dfCopyPastePng.h dfLocationIterator.h
+HEADERS += dfCopyModel.h dfCopyObj.h dfCopyPaste.h dfCopyPastePng.h dfLocationIterator.h common.h dfCopyPasteView.h
+
+RESOURCES += dfCopyPaste.qrc
 
 FORMS += dfCopyPaste.ui
-RESOURCES += dfCopyPaste.qrc
 
 CONFIG += qt
 CONFIG  += qxt
+LIBS += dfhack-debug.lib
 QXT += core gui globalshortcut
 
 CONFIG += debug_and_release

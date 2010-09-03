@@ -140,4 +140,6 @@ bool dfLocationIterator::next(){
         currentPos.y++;
         return true;
     }
+    return true;
+//    return false;
 }

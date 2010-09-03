@@ -1,29 +1,67 @@
 #include "dfCopyObj.h"
-#include <QtGlobal>
+#include "common.h"
 
 dfCopyObj::dfCopyObj(void)
 {
-    pos.resize(2);
-    pos[0].x = -30000;
-    pos[0].y = -30000;
-    pos[0].z = -30000;
-    pos[1].x = -30000;
-    pos[1].y = -30000;
-    pos[1].z = -30000;
+    cursorIdx temp;
+    temp.x = temp.y = temp.z = -30000;
+    pos << temp << temp;
     idx = 0;
 }
 
 dfCopyObj::dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2)
 {
-    DF = tDF;
-    pos.resize(2);
-    pos[0] = c1;
-    pos[1] = c2;
+    setDF(tDF);
+    pos << c1 << c2;
     setupVectors();
     getDataFromDF();
+    writeImages();
     idx = 0;
 }
+dfCopyObj::dfCopyObj(QImage img,DFHack::Context *tDF)
+{
+    setDF(tDF);
+    dfCopyPastePng png(DF);
+    dig = png.ThreeDVectorFromString(img.text("dig"));
+    build = png.ThreeDVectorFromString(img.text("build"));
+    images = png.ImagesFromString(img.text("rawNumbers"));
+    Name = img.text("name");
+    Comment = img.text("comment");
+    setTextForImages();
 
+}
+void dfCopyObj::writeImages()
+{
+    dfCopyPastePng png(DF);
+    images = png.getImagesForRange(pos);
+    setTextForImages();
+}
+void dfCopyObj::setTextForImages()
+{    
+    dfCopyPastePng png(DF);
+    for(int itr = 0;itr < images.size();itr++)
+    {
+        images[itr].setText("dig",png.stringFrom3dVector(dig));
+        images[itr].setText("build",png.stringFrom3dVector(build));
+        images[itr].setText("name", Name);
+        images[itr].setText("comment", Comment);
+    }
+}
+        
+void dfCopyObj::setName(QString n)
+{
+    Name = n;
+    for(int itr = 0;itr < images.size();itr++){
+        images[itr].setText("name",Name);
+    }
+}
+void dfCopyObj::setComment(QString c)
+{
+    Comment = c;
+    for(int itr = 0;itr < images.size();itr++){
+        images[itr].setText("comment",Comment);
+    }
+}
 void dfCopyObj::getDataFromDF()
 {
     dfLocationIterator itr(pos[0],pos[1],Maps);
@@ -86,7 +124,7 @@ void dfCopyObj::changeDesignation(DFHack::designations40d *ptr, QChar desig, cur
             
     }
 }
-QString dfCopyObj::printDig(QChar sep)
+QString dfCopyObj::printDig(QChar sep) const
 {
     QString ret;
     for(int z = 0;z < dig.size();z++){
@@ -133,6 +171,7 @@ void dfCopyObj::setDF(DFHack::Context *tDF)
 {
     DF = tDF;
     Maps = DF->getMaps();
+    Maps->Start();
 }
 
 void dfCopyObj::addPos(cursorIdx newPos)
@@ -142,13 +181,14 @@ void dfCopyObj::addPos(cursorIdx newPos)
     if(getValid() == 2){
         setupVectors();
         getDataFromDF();
+        writeImages();
     }
 }
 void dfCopyObj::clear(){
     pos[0].x = -30000;
     pos[1].x = -30000;
 }
-int dfCopyObj::getValid(){
+int dfCopyObj::getValid() const{
     int retVal = 0;
     if(pos[0].x != -30000){
         retVal++;
@@ -158,4 +198,3 @@ int dfCopyObj::getValid(){
     }
     return(retVal);
 }
-
