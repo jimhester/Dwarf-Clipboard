@@ -6,7 +6,6 @@
 #include "common.h"
 #include "dfCopyObj.h"
 #include "dfCopyModel.h"
-#include "dfCopyDelegate.h"
 #include "ui_dfCopyPaste.h"
 
 class Ui_TabWidget;
@@ -112,9 +111,7 @@ private:
     DFHack::Maps *Maps;
 
     //Copy things
-    QList<dfCopyObj> recentCopyObjs;
     cursorIdx prevCursor;
-    QList<dfCopyObj> copyLibrary;
     cursorIdx c3;
 
 };

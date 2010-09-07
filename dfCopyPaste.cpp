@@ -1,4 +1,4 @@
-//Base code adapted from Trolltech tutorial at http://doc.trolltech.com/4.2/desktop-systray-main-cpp.html
+//Base code adapted from Trolltech tutorial at http://doc.trolltech.com/4.2/desktop-dfCopyPaste-main-cpp.html
 //Modified and extended for dfCopyPaste by Jim Hester (belal)
 /****************************************************************************
 **
@@ -75,7 +75,7 @@ dfCopyPaste::dfCopyPaste()
     connect(thumbnailSizeLineEdit,SIGNAL(editingFinished()),this,SLOT(thumbnail_size_changed()));
     connect(inputDelayMsLineEdit,SIGNAL(editingFinished()),this,SLOT(input_delay_changed()));
     
-    recentModel = new dfCopyModel(DF,&recentCopyObjs);
+    recentModel = new dfCopyModel(DF);
     recentModel->setIconSize(QSize(thumbnail_size,thumbnail_size));
  //   libraryModel = new dfCopyModel(&libraryCopyObjs);
     tableView_recent->setModel(recentModel);
@@ -134,11 +134,12 @@ void dfCopyPaste::delete_selected()
 void dfCopyPaste::save()
 {
     QModelIndex idx = tableView_recent->currentIndex();
+	dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
     if(idx.isValid()){
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
                             ".",
                             tr("Png Images (*.png)"));
-        QImage img = recentCopyObjs.at(idx.row()).getImage();
+        QImage img = item->getImage();
         img.save(fileName);
     }
 }
@@ -152,8 +153,8 @@ void dfCopyPaste::load()
     {
 
         img.load(fileName);
-        dfCopyObj copy(img,DF);
-        recentModel->prependData(copy);
+        dfCopyObj* data = new dfCopyObj(img,DF);
+        recentModel->prependData(data);
     }
     setup_views();
 }
@@ -187,7 +188,7 @@ void dfCopyPaste::setVisible(bool visible)
 void dfCopyPaste::closeEvent(QCloseEvent *event)
 {
     if (trayIcon->isVisible()) {
-        QMessageBox::information(this, tr("Systray"),
+        QMessageBox::information(this, tr("dfCopyPaste"),
                                  tr("dfCopyPaste will keep running in the "
                                     "system tray. To terminate the program, "
                                     "choose <b>Quit</b> in the system tray."));
@@ -252,9 +253,9 @@ void dfCopyPaste::copy() //this will be ugly, I apoligize to my future self
         else
         {
             trayIcon->showMessage(tr("df Copy"),tr("Region Selected, press %1 to paste or %2 to start a new copy").arg(paste_designation_shortcut->shortcut().toString()).arg(copy_shortcut->shortcut().toString()));
-            dfCopyObj currentCopy(DF,prevCursor,tempCursor);
-            recentModel->prependData(currentCopy);
-            tableView_recent->selectRow(0);
+            dfCopyObj * newObj = new dfCopyObj(DF,prevCursor,tempCursor);
+            recentModel->prependData(newObj);
+          //  tableView_recent->selectRow(0);
             setup_views();
             prevCursor.x = -30000;
         }
@@ -263,25 +264,24 @@ void dfCopyPaste::copy() //this will be ugly, I apoligize to my future self
 
 void dfCopyPaste::paste_designations()
 {
-    if(recentCopyObjs.size() > 0){
-        cursorIdx tempCursor;
-        if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){
-                trayIcon->showMessage(tr("df Paste"),tr("Please place the df cursor"));
-            }
-            else{
-                trayIcon->showMessage( tr("df Paste"),
-                         tr("Pasting!"));
-                QModelIndex idx = tableView_recent->currentIndex();
-                if(idx.isValid()){
-                    recentCopyObjs[idx.row()].paste(tempCursor);
-                }
-            }
-    }
+	QModelIndex idx = tableView_recent->currentIndex();
+	if(idx.isValid()){
+		cursorIdx tempCursor;
+		if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){
+				trayIcon->showMessage(tr("df Paste"),tr("Please place the df cursor"));
+		}
+		else
+		{
+			trayIcon->showMessage( tr("df Paste"),tr("Pasting!"));
+			dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+			item->paste(tempCursor);
+		}
+	}
 }
 
 void dfCopyPaste::messageClicked()
 {
-    QMessageBox::information(0, tr("Systray"),
+    QMessageBox::information(0, tr("dfCopyPaste"),
                              tr("Sorry, I already gave what help I could.\n"
                                 "Maybe you should try asking a human?"));
 }

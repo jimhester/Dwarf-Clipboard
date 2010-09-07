@@ -8,10 +8,64 @@
 #include <QBuffer>
 #include <QUrl>
 
+dfCopyModel::dfCopyModel(DFHack::Context * tDF,QObject *parent)
+: DF(tDF),QAbstractItemModel(parent)
+{
+	size = QSize(64,64);
+	rootItem = new dfCopyObj();
+}
+dfCopyModel::~dfCopyModel()
+{
+	delete rootItem;
+}
+QModelIndex dfCopyModel::index(int row, int column,const QModelIndex &parent) const
+{
+	if (!hasIndex(row, column, parent))
+		return QModelIndex();
+
+	dfCopyObj *parentItem;
+
+	if (!parent.isValid())
+		parentItem = rootItem;
+	else
+		parentItem = static_cast<dfCopyObj*>(parent.internalPointer());
+
+	dfCopyObj *childItem = parentItem->child(row);
+	if (childItem)
+		return createIndex(row, column, childItem);
+	else
+		return QModelIndex();
+}
+QModelIndex dfCopyModel::parent(const QModelIndex &index) const
+ {
+     if (!index.isValid())
+         return QModelIndex();
+
+     dfCopyObj *childItem = static_cast<dfCopyObj*>(index.internalPointer());
+     dfCopyObj *parentItem = childItem->parent();
+
+     if (parentItem == rootItem)
+         return QModelIndex();
+
+     return createIndex(parentItem->row(), 0, parentItem);
+ }
 int dfCopyModel::rowCount(const QModelIndex &parent) const
 {
-    return list->size();
+ dfCopyObj *parentItem;
+ if (parent.column() > 0)
+     return 0;
+
+ if (!parent.isValid())
+     parentItem = rootItem;
+ else
+     parentItem = static_cast<dfCopyObj*>(parent.internalPointer());
+
+ return parentItem->childCount();
 }
+//int dfCopyModel::rowCount(const QModelIndex &parent) const
+//{
+//    return list->size();
+//}
 int dfCopyModel::columnCount(const QModelIndex &parent) const
 {
     return 3;
@@ -21,19 +75,18 @@ QVariant dfCopyModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
          return QVariant();
 
-     if (index.row() >= list->size())
-         return QVariant();
+	dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
     if(role == Qt::UserRole){
-         return list->at(index.row()).getImage();
+         return item->getImage();
      }
      if(role == Qt::UserRole+1){
-         return list->at(index.row()).getName();
+         return item->getName();
      }
      if(index.column() == 0){
          if(role == Qt::DecorationRole){
              QImage temp(size,QImage::Format_ARGB32);
              QPainter paint(&temp);
-             QImage blah = list->at(index.row()).getImage().scaled(size,Qt::KeepAspectRatio);
+             QImage blah = item->getImage().scaled(size,Qt::KeepAspectRatio);
              paint.fillRect(0,0,size.width(),size.height(),Qt::transparent);
              paint.drawImage(0,0,blah);
              paint.end();
@@ -42,9 +95,9 @@ QVariant dfCopyModel::data(const QModelIndex &index, int role) const
          return QVariant();
      }
      if (index.column() == 1 && (role == Qt::DisplayRole || role == Qt::EditRole))
-            return list->at(index.row()).getName();
+            return item->getName();
      if (index.column() == 2 && (role == Qt::DisplayRole || role == Qt::EditRole))
-            return list->at(index.row()).getComment();
+            return item->getComment();
 
     return QVariant();
 }
@@ -75,11 +128,12 @@ Qt::ItemFlags dfCopyModel::flags(const QModelIndex &index) const
 bool dfCopyModel::setData(const QModelIndex &index,const QVariant &value, int role)
  {
      if (index.isValid() && role == Qt::EditRole) {
+		dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
          if(index.column() == 1){
-            (*list)[index.row()].setName(value.toString());
+            item->setName(value.toString());
          }
          if(index.column() == 2){
-            (*list)[index.row()].setComment(value.toString());
+            item->setComment(value.toString());
          }
         emit dataChanged(index, index);
         return true;
@@ -101,8 +155,9 @@ QMimeData *dfCopyModel::mimeData(const QModelIndexList &indexes) const
      buffer.open(QIODevice::WriteOnly);
      foreach (QModelIndex index, indexes) {
          if (index.isValid()) {
+			 dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
 //            qDebug() << index;
-            QImage img = list->at(index.row()).getImage();
+            QImage img = item->getImage();
 //            qDebug() << img.text("name") << img.text("comment");
             img.save(&buffer,"PNG");
          }
@@ -124,7 +179,8 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
              buffer.open(QIODevice::ReadOnly);
              QImage img;
              img.load(&buffer,"PNG");
-             prependData(dfCopyObj(img,DF));
+			 dfCopyObj* newObj = new dfCopyObj(img,DF);
+             prependData(newObj);
              return true;
      }
      if(data->hasFormat("text/uri-list"))
@@ -132,27 +188,30 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
          QString file = data->urls().takeFirst().toLocalFile();
          QImage img;
          img.load(file,"PNG");
-         insertDataAtPoint(dfCopyObj(img,DF),row);
+		 dfCopyObj * newObj = new dfCopyObj(img,DF);
+         insertDataAtPoint(newObj,row);
          return true;
      }
      return false;
 }
-bool dfCopyModel::insertDataAtPoint(const dfCopyObj &data,int row)
+bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row)
 {
     beginInsertRows(QModelIndex(),row+1,row+1);
-    if(row > list->size()){
-        list->append(data);
+    if(row > rootItem->row()){
+        rootItem->appendChild(data);
     }
     else{
-        list->insert(row,data);
+		rootItem->insertChild(row,data);
     }
+	data->setParent(rootItem);
     endInsertRows();
     return true;
 }
- bool dfCopyModel::prependData(const dfCopyObj &data)
+ bool dfCopyModel::prependData(dfCopyObj *data)
  {
      beginInsertRows(QModelIndex(),0,0);
-     list->prepend(data);
+	 rootItem->prependChild(data);
+	 data->setParent(rootItem);
      endInsertRows();
      return true;
  }
@@ -160,7 +219,7 @@ bool dfCopyModel::removeRows ( int row, int count, const QModelIndex & parent )
 {
      beginRemoveRows(QModelIndex(), row, row+count-1);
      for (int itr = 0; itr < count; ++itr) {
-         list->removeAt(row);
+         rootItem->removeChildAt(row);
      }
      endRemoveRows();
      return true;

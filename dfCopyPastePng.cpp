@@ -15,11 +15,11 @@ int dfCopyPastePng::delay = 100;
 dfCopyPastePng::dfCopyPastePng(DFHack::Context * DFPtr)
 {
     DF = DFPtr;
-    QString Path("C:/NCF/DF/versions/windows/df_31_12_win/data/art/curses_square_16x16.png");
+    QString Path("C:/DF/versions/windows/df_31_12_win/data/art/curses_square_16x16.png");
     tileSet = new QImage(Path);
     tileWidth = tileSet->width()/16;
     tileHeight = tileSet->height()/16;
-    QString Path2("C:/NCF/DF/versions/windows/df_31_12_win/data/init/colors.txt");
+    QString Path2("C:/DF/versions/windows/df_31_12_win/data/init/colors.txt");
     readConfig(Path2);
 }
 QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range)

@@ -1,15 +1,16 @@
 #include "dfCopyObj.h"
 #include "common.h"
 
-dfCopyObj::dfCopyObj(void)
+dfCopyObj::dfCopyObj(dfCopyObj *parent)
 {
     cursorIdx temp;
     temp.x = temp.y = temp.z = -30000;
     pos << temp << temp;
     idx = 0;
+	parentItem = parent;
 }
 
-dfCopyObj::dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2)
+dfCopyObj::dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2, dfCopyObj *parent)
 {
     setDF(tDF);
     pos << c1 << c2;
@@ -17,8 +18,9 @@ dfCopyObj::dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2)
     getDataFromDF();
     writeImages();
     idx = 0;
+	parentItem = parent;
 }
-dfCopyObj::dfCopyObj(QImage img,DFHack::Context *tDF)
+dfCopyObj::dfCopyObj(QImage img,DFHack::Context *tDF,dfCopyObj *parent)
 {
     setDF(tDF);
     dfCopyPastePng png(DF);
@@ -28,7 +30,45 @@ dfCopyObj::dfCopyObj(QImage img,DFHack::Context *tDF)
     Name = img.text("name");
     Comment = img.text("comment");
     setTextForImages();
-
+	parentItem = parent;
+}
+dfCopyObj::~dfCopyObj()
+{
+	qDeleteAll(childItems);
+}
+void dfCopyObj::appendChild(dfCopyObj *item)
+{
+	childItems.append(item);
+}
+void dfCopyObj::prependChild(dfCopyObj *item)
+{
+	childItems.prepend(item);
+}
+void dfCopyObj::insertChild(int position, dfCopyObj *item)
+{
+	childItems.insert(position,item);
+}
+void dfCopyObj::removeChildAt(int position)
+{
+	childItems.removeAt(position);
+}
+dfCopyObj* dfCopyObj::child(int row)
+{
+	return childItems.value(row);
+}
+int dfCopyObj::childCount() const
+{
+	return childItems.count();
+}
+int dfCopyObj::row() const
+{
+	if(parentItem)
+		return parentItem->childItems.indexOf(const_cast<dfCopyObj*>(this));
+	return 0;
+}
+dfCopyObj* dfCopyObj::parent()
+{
+	return parentItem;
 }
 void dfCopyObj::writeImages()
 {

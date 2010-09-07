@@ -62,13 +62,13 @@ cursorIdx dfLocationIterator::end(){
     return currentPos;
 }
 void dfLocationIterator::updateBlock(){
-    if(!Maps) return;
+    if(!Maps || !Maps->isValidBlock(currentTile.x,currentTile.y,currentTile.z)) return;
     Maps->Start();
     Maps->ReadBlock40d(currentTile.x,currentTile.y,currentTile.z,&currentBlock);
     Maps->ReadDesignations(currentTile.x,currentTile.y,currentTile.z,&currentDesignation);
 }
 void dfLocationIterator::writeDesigations(){
-    if(!Maps) return;
+    if(!Maps || !Maps->isValidBlock(currentTile.x,currentTile.y,currentTile.z)) return;
     if(updateDesignationsBlock){
         Maps->Start();
         Maps->WriteDesignations(currentTile.x,currentTile.y,currentTile.z, &currentDesignation);

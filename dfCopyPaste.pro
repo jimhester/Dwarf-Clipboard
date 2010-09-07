@@ -8,8 +8,8 @@ FORMS += dfCopyPaste.ui
 
 CONFIG += qt
 CONFIG  += qxt
-LIBS += dfhack-debug.lib
 QXT += core gui globalshortcut
+LIBS += dfhack-debug.lib
 
 CONFIG += debug_and_release
 

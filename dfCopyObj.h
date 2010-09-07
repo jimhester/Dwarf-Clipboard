@@ -10,6 +10,8 @@
 #include <QImage>
 #include <QColor>
 
+class dfCopyObj;
+
 class dfCopyObj
 {
 private:
@@ -28,10 +30,21 @@ private:
     QList<QImage> images;
     QString Name;
     QString Comment;
+	QList<dfCopyObj*> childItems;
+	dfCopyObj *parentItem;
 public:
-    dfCopyObj(void);
-    dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2);
-    dfCopyObj::dfCopyObj(QImage img,DFHack::Context *tDF);
+	dfCopyObj::~dfCopyObj();
+	void appendChild(dfCopyObj *child);
+	void prependChild(dfCopyObj *child);
+	void insertChild(int position,dfCopyObj *child);
+	void removeChildAt(int position);
+	dfCopyObj *child(int row);
+	int childCount() const;
+	int row() const;
+	dfCopyObj *parent();
+    dfCopyObj(dfCopyObj *parent = 0);
+    dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
+    dfCopyObj(QImage img,DFHack::Context *tDF,dfCopyObj *parent = 0);
     void setDF(DFHack::Context *tDF);
     QVector<QVector<QVector<QString > > > getDig(){ return dig; };
     QVector<QVector<QVector<QString > > > getBuild(){ return build; };
@@ -44,6 +57,7 @@ public:
     QString getComment()const { return Comment; };
     void setName(QString n);
     void setComment(QString c);
+	void setParent(dfCopyObj *parent){ parentItem = parent; };
     QList<cursorIdx> getRange()const { return pos; };
     void paste(cursorIdx location);
 };
