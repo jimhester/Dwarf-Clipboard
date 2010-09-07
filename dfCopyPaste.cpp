@@ -68,17 +68,26 @@ dfCopyPaste::dfCopyPaste()
 
     connect(pushButton_recent_save, SIGNAL(clicked()),this,SLOT(save()));
     connect(pushButton_recent_load, SIGNAL(clicked()),this,SLOT(load()));
+    connect(pushButton_library_save_selected, SIGNAL(clicked()),this,SLOT(save()));
+    connect(pushButton_library_save,SIGNAL(clicked()),this,SLOT(save_library()));
+    connect(pushButton_library_load, SIGNAL(clicked()),this,SLOT(load()));
     connect(pushButton_recent_paste_designations, SIGNAL(clicked()),this,SLOT(paste_designations()));
+    connect(pushButton_library_paste_designations, SIGNAL(clicked()),this,SLOT(paste_designations()));
 
     connect(copyShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(copy_shortcut_changed()));
     connect(pasteDesignationShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(paste_designation_shortcut_changed()));
     connect(thumbnailSizeLineEdit,SIGNAL(editingFinished()),this,SLOT(thumbnail_size_changed()));
     connect(inputDelayMsLineEdit,SIGNAL(editingFinished()),this,SLOT(input_delay_changed()));
+
+    connect(pushButton_to_library,SIGNAL(clicked()),this,SLOT(copy_to_library()));
     
     recentModel = new dfCopyModel(DF);
-    recentModel->setIconSize(QSize(thumbnail_size,thumbnail_size));
- //   libraryModel = new dfCopyModel(&libraryCopyObjs);
+    tableView_recent->setIconSize(QSize(thumbnail_size,thumbnail_size));
     tableView_recent->setModel(recentModel);
+    libraryModel = new dfCopyModel(DF);
+    treeView_library->setModel(libraryModel);
+    tableView_recent->setIconSize(QSize(thumbnail_size,thumbnail_size));
+    load_directory("library");
     setup_views();
     tableView_recent->verticalHeader()->setDefaultSectionSize(thumbnail_size+1);
     tableView_recent->horizontalHeader()->setDefaultSectionSize(thumbnail_size+7);
@@ -93,12 +102,44 @@ dfCopyPaste::dfCopyPaste()
     setWindowTitle(tr("dfCopyPaste"));
     prevCursor.x = -30000;
 }
+void dfCopyPaste::copy_to_library()
+{
+    QModelIndex idx = tableView_recent->currentIndex();
+    if(!idx.isValid()){
+        return;
+    }
+    dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+    dfCopyObj *item2 = new dfCopyObj(*item);
+    libraryModel->appendData(item2);
+}
+
+void dfCopyPaste::save_library(QDir current, dfCopyObj* parent)
+{
+    if(parent == NULL){
+        parent = libraryModel->getRoot();
+    }
+    dfCopyObj* child;
+    for(int i = 0;i < parent->childCount();i++){
+        child = parent->child(i);
+        if(child->getImage().isNull()){
+            current.mkdir(child->getName());
+            current.cd(child->getName());
+            save_library(current,child);
+        }
+        else{
+            QImage img = child->getImage();
+            img.save(child->getName() + ".png");
+        }
+    }
+}         
+
 void dfCopyPaste::setup_views()
 {
-    tableView_recent->setColumnWidth(0,thumbnail_size);
-    tableView_recent->setMinimumWidth(thumbnail_size);
+    tableView_recent->setIconSize(QSize(thumbnail_size,thumbnail_size));
     tableView_recent->resizeColumnToContents(0);
     tableView_recent->resizeRowsToContents();
+    treeView_library->setIconSize(QSize(thumbnail_size,thumbnail_size));
+    treeView_library->resizeColumnToContents(0);
 }
 void dfCopyPaste::paste_designation_shortcut_changed()
 {
@@ -122,7 +163,8 @@ void dfCopyPaste::input_delay_changed()
 void dfCopyPaste::thumbnail_size_changed()
 {
     thumbnail_size = thumbnailSizeLineEdit->text().toInt();
-    recentModel->setIconSize(QSize(thumbnail_size,thumbnail_size));
+    tableView_recent->setIconSize(QSize(thumbnail_size,thumbnail_size));
+    treeView_library->setIconSize(QSize(thumbnail_size,thumbnail_size));
     setup_views();
 }
 void dfCopyPaste::delete_selected()
@@ -133,7 +175,16 @@ void dfCopyPaste::delete_selected()
 }
 void dfCopyPaste::save()
 {
-    QModelIndex idx = tableView_recent->currentIndex();
+    QModelIndex idx;
+    if(currentIndex() > 1 || currentIndex() < 0){
+        return;
+    }
+    if(currentIndex() == 0){
+        idx = tableView_recent->currentIndex();
+    }
+    if(currentIndex() == 1){
+        idx = treeView_library->currentIndex();
+    }
 	dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
     if(idx.isValid()){
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
@@ -147,17 +198,52 @@ void dfCopyPaste::load()
 {
     QImage img;
     QString fileName;
+    dfCopyModel* model;
+    if(currentIndex() > 1 || currentIndex() < 0){
+        return;
+    }
+    if(currentIndex() == 0){
+        model = recentModel;
+    }
+    if(currentIndex() == 1){
+        model = libraryModel;
+    }
     foreach(fileName,QFileDialog::getOpenFileNames(this, tr("Open File"),
                             ".",
                             tr("Png Images (*.png)")))
     {
 
         img.load(fileName);
-        dfCopyObj* data = new dfCopyObj(img,DF);
-        recentModel->prependData(data);
+        dfCopyObj* data = new dfCopyObj(DF,img);
+            QModelIndex idx;
+    
+        model->prependData(data);
     }
     setup_views();
 }
+void dfCopyPaste::load_directory(QString directory,dfCopyObj * parent)
+{
+    QImage img;
+    QString fileName;
+    QFileInfo file;
+    foreach(file, QDir(directory).entryInfoList(QDir::NoFilter,QDir::DirsFirst | QDir::Name))
+    {
+        if(file.isDir() && file.fileName()!= "." && file.fileName() != "..")
+        {
+            dfCopyObj* dir = new dfCopyObj(DF,parent);
+            dir->setName(file.fileName());
+            libraryModel->appendData(dir,parent);
+            load_directory(file.filePath(),dir);
+        }
+        else if(file.suffix() == "png")
+        {
+            img.load(file.absoluteFilePath());
+            dfCopyObj* data = new dfCopyObj(DF,img,parent);
+            libraryModel->appendData(data,parent);
+        }
+    }
+}
+        
 void dfCopyPaste::connectToDF()
 {
     bool ok = true;
@@ -231,7 +317,7 @@ void dfCopyPaste::showMessage()
                           durationSpinBox->value() * 1000);
 }
 
-void dfCopyPaste::copy() //this will be ugly, I apoligize to my future self
+void dfCopyPaste::copy()
 {
     cursorIdx tempCursor;
     if(prevCursor.x == -30000){
@@ -255,7 +341,7 @@ void dfCopyPaste::copy() //this will be ugly, I apoligize to my future self
             trayIcon->showMessage(tr("df Copy"),tr("Region Selected, press %1 to paste or %2 to start a new copy").arg(paste_designation_shortcut->shortcut().toString()).arg(copy_shortcut->shortcut().toString()));
             dfCopyObj * newObj = new dfCopyObj(DF,prevCursor,tempCursor);
             recentModel->prependData(newObj);
-          //  tableView_recent->selectRow(0);
+            tableView_recent->selectRow(0);
             setup_views();
             prevCursor.x = -30000;
         }
@@ -264,7 +350,17 @@ void dfCopyPaste::copy() //this will be ugly, I apoligize to my future self
 
 void dfCopyPaste::paste_designations()
 {
-	QModelIndex idx = tableView_recent->currentIndex();
+
+    QModelIndex idx;
+    if(currentIndex() > 1 || currentIndex() < 0){
+        return;
+    }
+    if(currentIndex() == 0){
+        idx = tableView_recent->currentIndex();
+    }
+    if(currentIndex() == 1){
+        idx = treeView_library->currentIndex();
+    }
 	if(idx.isValid()){
 		cursorIdx tempCursor;
 		if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){

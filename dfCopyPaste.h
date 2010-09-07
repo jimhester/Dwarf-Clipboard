@@ -3,6 +3,7 @@
 
 #include <QSystemTrayIcon>
 #include <QWidget>
+#include <QDir>
 #include "common.h"
 #include "dfCopyObj.h"
 #include "dfCopyModel.h"
@@ -58,6 +59,8 @@ private slots:
     void save_and_quit();
     void input_delay_changed();
     void thumbnail_size_changed();
+    void copy_to_library();
+    void save_library(QDir current=QDir("library"), dfCopyObj* parent=0);
 private:
     void createIconGroupBox();
     void createMessageGroupBox();
@@ -65,6 +68,7 @@ private:
     void createTrayIcon();
     void load_config();
     void setup_views();
+    void load_directory(QString directory,dfCopyObj * parent=0);
 
 
     //DF Stuff
@@ -102,6 +106,7 @@ private:
 
     Ui_TabWidget * testWindow;
     dfCopyModel * recentModel;
+    dfCopyModel * libraryModel;
 
     //DF things
     DFHack::ContextManager *DFMgr;

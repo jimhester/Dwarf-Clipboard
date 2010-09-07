@@ -1,8 +1,9 @@
 #include "dfCopyObj.h"
 #include "common.h"
 
-dfCopyObj::dfCopyObj(dfCopyObj *parent)
+dfCopyObj::dfCopyObj(DFHack::Context *tDF,dfCopyObj *parent)
 {
+    setDF(tDF);
     cursorIdx temp;
     temp.x = temp.y = temp.z = -30000;
     pos << temp << temp;
@@ -20,7 +21,7 @@ dfCopyObj::dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2, dfCopyObj 
     idx = 0;
 	parentItem = parent;
 }
-dfCopyObj::dfCopyObj(QImage img,DFHack::Context *tDF,dfCopyObj *parent)
+dfCopyObj::dfCopyObj(DFHack::Context *tDF,QImage img,dfCopyObj *parent)
 {
     setDF(tDF);
     dfCopyPastePng png(DF);

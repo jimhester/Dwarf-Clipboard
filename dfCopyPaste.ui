@@ -32,7 +32,7 @@
    </attribute>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="dfCopyPasteView" name="tableView_recent">
+     <widget class="dfCopyPasteTableView" name="tableView_recent">
       <property name="acceptDrops">
        <bool>true</bool>
       </property>
@@ -59,13 +59,6 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton_to_library">
-        <property name="text">
-         <string>Add to Library</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QPushButton" name="pushButton_recent_load">
         <property name="text">
          <string>Load From File</string>
@@ -75,7 +68,15 @@
       <item>
        <widget class="QPushButton" name="pushButton_recent_save">
         <property name="text">
-         <string>Save To File</string>
+         <string>Save Selected
+To File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_to_library">
+        <property name="text">
+         <string>Add to Library</string>
         </property>
        </widget>
       </item>
@@ -96,6 +97,7 @@
        <widget class="QPushButton" name="pushButton_recent_paste_designations">
         <property name="text">
          <string>Paste
+Selected
 Designations</string>
         </property>
         <property name="shortcut">
@@ -111,43 +113,66 @@ Designations</string>
    <attribute name="title">
     <string>Library</string>
    </attribute>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="dfCopyPasteView" name="tableView_library"/>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QPushButton" name="pushButton_library_save">
-         <property name="text">
-          <string>Save to File</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_paste_designations_library">
-         <property name="text">
-          <string>Paste
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <widget class="dfCopyPasteTreeView" name="treeView_library">
+      <property name="iconSize">
+       <size>
+        <width>64</width>
+        <height>64</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QPushButton" name="pushButton_library_load">
+        <property name="text">
+         <string>Load From File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_library_save_selected">
+        <property name="text">
+         <string>Save Selected
+To File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_library_save">
+        <property name="text">
+         <string>Save Library</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_library_paste_designations">
+        <property name="text">
+         <string>Paste
+Selected
 Designations</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-    </layout>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
   <widget class="QWidget" name="tab_options">
    <attribute name="title">
@@ -261,9 +286,14 @@ Designations</string>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>dfCopyPasteView</class>
+   <class>dfCopyPasteTableView</class>
    <extends>QTableView</extends>
-   <header>dfcopypasteview.h</header>
+   <header>dfcopypastetableview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>dfCopyPasteTreeView</class>
+   <extends>QTreeView</extends>
+   <header>dfcopypastetreeview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

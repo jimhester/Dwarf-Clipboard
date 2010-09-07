@@ -42,9 +42,9 @@ public:
 	int childCount() const;
 	int row() const;
 	dfCopyObj *parent();
-    dfCopyObj(dfCopyObj *parent = 0);
-    dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
-    dfCopyObj(QImage img,DFHack::Context *tDF,dfCopyObj *parent = 0);
+    dfCopyObj(DFHack::Context *tDF, dfCopyObj *parent = 0);
+    dfCopyObj(DFHack::Context *tDF, cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
+    dfCopyObj(DFHack::Context *tDF, QImage img,dfCopyObj *parent = 0);
     void setDF(DFHack::Context *tDF);
     QVector<QVector<QVector<QString > > > getDig(){ return dig; };
     QVector<QVector<QVector<QString > > > getBuild(){ return build; };
