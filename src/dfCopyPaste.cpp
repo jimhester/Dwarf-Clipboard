@@ -28,14 +28,14 @@
 #include <QtGui>
 #include <QtDebug>
 
-#include "dfCopyPaste.h"
-#include "dfCopyPastePng.h"
+#include "inc\dfCopyPaste.h"
+#include "inc\dfCopyPastePng.h"
 #include "ui_dfCopyPaste.h"
 #include <QxtGlobalShortcut>
 #include <QTextStream>
 #define DFHACK_WANT_MISCUTILS
 #define DFHACK_WANT_TILETYPES
-#include "DFHack.h"
+#include "inc\DFHack.h"
 #include "dfhack/modules/WindowIO.h"
 
 dfCopyPaste::dfCopyPaste()
@@ -104,13 +104,17 @@ dfCopyPaste::dfCopyPaste()
 }
 void dfCopyPaste::copy_to_library()
 {
-    QModelIndex idx = tableView_recent->currentIndex();
-    if(!idx.isValid()){
-        return;
+    QModelIndex idx;   
+    foreach(idx, tableView_recent->selectionModel()->selectedRows())
+    {
+        if(idx.isValid())
+        {
+            dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+            dfCopyObj *item2 = new dfCopyObj(*item);
+            libraryModel->appendData(item2);
+        }
     }
-    dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
-    dfCopyObj *item2 = new dfCopyObj(*item);
-    libraryModel->appendData(item2);
+    setup_views();
 }
 
 void dfCopyPaste::save_library(QDir current, dfCopyObj* parent)
@@ -122,13 +126,13 @@ void dfCopyPaste::save_library(QDir current, dfCopyObj* parent)
     for(int i = 0;i < parent->childCount();i++){
         child = parent->child(i);
         if(child->getImage().isNull()){
-            current.mkdir(child->getName());
-            current.cd(child->getName());
+            current.mkpath(current.absolutePath() + "/" + child->getName());
+         //   current.cd(current.absolutePath() + "/" + child->getName());
             save_library(current,child);
         }
         else{
             QImage img = child->getImage();
-            img.save(child->getName() + ".png");
+            img.save(current.absolutePath() + child->getName() + ".png");
         }
     }
 }         
@@ -169,29 +173,57 @@ void dfCopyPaste::thumbnail_size_changed()
 }
 void dfCopyPaste::delete_selected()
 {
-    QModelIndex idx = tableView_recent->currentIndex();
-    recentModel->removeRow(idx.row());
-    tableView_recent->selectRow(idx.row());
+    QItemSelectionModel* select_model;
+    QModelIndex idx;
+    dfCopyModel* model;
+    if(currentIndex() > 1 || currentIndex() < 0)
+    {
+        return;
+    }
+    if(currentIndex() == 0)
+    {
+        select_model = tableView_recent->selectionModel();
+        model = recentModel;
+    }
+    if(currentIndex() == 1)
+    {
+        select_model = treeView_library->selectionModel();
+        model = libraryModel;
+    }
+    
+    foreach(idx, select_model->selectedRows())
+    {
+        model->removeRow(idx.row());
+//        selectRow(idx.row());
+    }
 }
 void dfCopyPaste::save()
 {
+    QItemSelectionModel* select_model;
     QModelIndex idx;
-    if(currentIndex() > 1 || currentIndex() < 0){
+    if(currentIndex() > 1 || currentIndex() < 0)
+    {
         return;
     }
-    if(currentIndex() == 0){
-        idx = tableView_recent->currentIndex();
+    if(currentIndex() == 0)
+    {
+        select_model = tableView_recent->selectionModel();
     }
-    if(currentIndex() == 1){
-        idx = treeView_library->currentIndex();
+    if(currentIndex() == 1)
+    {
+        select_model = treeView_library->selectionModel();
     }
-	dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
-    if(idx.isValid()){
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                            ".",
-                            tr("Png Images (*.png)"));
-        QImage img = item->getImage();
-        img.save(fileName);
+    
+    foreach(idx, select_model->selectedRows())
+    {
+	    dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+        if(idx.isValid()){
+            QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                                ".",
+                                tr("Png Images (*.png)"));
+            QImage img = item->getImage();
+            img.save(fileName);
+        }
     }
 }
 void dfCopyPaste::load()

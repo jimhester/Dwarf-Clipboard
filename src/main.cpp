@@ -1,4 +1,4 @@
-#include "dfCopyPaste.h"
+#include "inc\dfCopyPaste.h"
 #include <QtGui/QApplication>
 #include <QtGui>
 

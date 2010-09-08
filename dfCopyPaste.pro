@@ -1,6 +1,6 @@
-SOURCES += dfCopyModel.cpp dfCopyObj.cpp dfCopyPaste.cpp dfCopyPastePng.cpp dfLocationIterator.cpp main.cpp
+SOURCES += src/*.cpp
 
-HEADERS += dfCopyModel.h dfCopyObj.h dfCopyPaste.h dfCopyPastePng.h dfLocationIterator.h common.h dfCopyPasteTableView.h dfCopyPasteTreeView.h
+HEADERS += inc/*.h
 
 RESOURCES += dfCopyPaste.qrc
 

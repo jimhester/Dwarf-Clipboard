@@ -1,5 +1,5 @@
-#include "dfCopyObj.h"
-#include "common.h"
+#include "inc\dfCopyObj.h"
+#include "inc\common.h"
 
 dfCopyObj::dfCopyObj(DFHack::Context *tDF,dfCopyObj *parent)
 {
@@ -210,9 +210,12 @@ void dfCopyObj::setupVectors()
 }*/
 void dfCopyObj::setDF(DFHack::Context *tDF)
 {
-    DF = tDF;
-    Maps = DF->getMaps();
-    Maps->Start();
+    if(tDF)
+    {
+        DF = tDF;
+        Maps = DF->getMaps();
+        Maps->Start();
+    }
 }
 
 void dfCopyObj::addPos(cursorIdx newPos)

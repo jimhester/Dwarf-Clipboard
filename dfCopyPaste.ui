@@ -21,7 +21,7 @@
     <normaloff>:/images/dfCopyPaste.png</normaloff>:/images/dfCopyPaste.png</iconset>
   </property>
   <property name="currentIndex">
-   <number>0</number>
+   <number>1</number>
   </property>
   <widget class="QWidget" name="tab_recent">
    <property name="acceptDrops">
@@ -116,6 +116,18 @@ Designations</string>
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
      <widget class="dfCopyPasteTreeView" name="treeView_library">
+      <property name="editTriggers">
+       <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+      </property>
+      <property name="dragDropMode">
+       <enum>QAbstractItemView::DragDrop</enum>
+      </property>
+      <property name="defaultDropAction">
+       <enum>Qt::CopyAction</enum>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::ExtendedSelection</enum>
+      </property>
       <property name="iconSize">
        <size>
         <width>64</width>

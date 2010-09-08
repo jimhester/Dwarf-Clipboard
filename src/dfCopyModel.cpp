@@ -1,4 +1,4 @@
-#include "dfCopyModel.h"
+#include "inc\dfCopyModel.h"
 #include <QAbstractItemView>
 #include <QAbstractListModel>
 #include <QVariant>
@@ -70,12 +70,13 @@ QVariant dfCopyModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
          return QVariant();
 
-	dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
-   if(item->getImage().isNull()){
-         if(index.column() == 0 && role == Qt::DisplayRole){
-             return item->getName();
-         }
-         return QVariant();
+    dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+    if(item->getImage().isNull()){
+        if(index.column() == 0 && (role == Qt::DisplayRole || role == Qt::EditRole))
+        {
+            return item->getName();
+        }
+        return QVariant();
      }
      if(index.column() == 0){
          if(role == Qt::DecorationRole){           
@@ -105,13 +106,18 @@ QVariant dfCopyModel::headerData(int section, Qt::Orientation orientation,int ro
 }
 Qt::ItemFlags dfCopyModel::flags(const QModelIndex &index) const
  {
+
      Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
      if (!index.isValid())
          return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled;
+	 dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+	 if(item->getImage().isNull()){
+		 return defaultFlags | Qt::ItemIsDropEnabled;
+	 }
      if(index.column() == 0){
-         return defaultFlags | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+         return defaultFlags | Qt::ItemIsDragEnabled; // | Qt::ItemIsDropEnabled;
      }
-     return defaultFlags | Qt::ItemIsEditable;
+	 return defaultFlags;
  }
 bool dfCopyModel::setData(const QModelIndex &index,const QVariant &value, int role)
  {
@@ -139,6 +145,7 @@ bool dfCopyModel::setData(const QModelIndex &index,const QVariant &value, int ro
  }
 QStringList dfCopyModel::mimeTypes() const
  {
+  //   return QAbstractItemModel::mimeTypes();
      QStringList types;
      types << "image/png" << "text/uri-list";
      return types;
@@ -146,6 +153,7 @@ QStringList dfCopyModel::mimeTypes() const
 
 QMimeData *dfCopyModel::mimeData(const QModelIndexList &indexes) const
  {
+//     return QAbstractItemModel::mimeData(indexes);
      QMimeData *mimeData = new QMimeData();
      QByteArray encodedData;
      QBuffer buffer(&encodedData);
@@ -164,8 +172,24 @@ QMimeData *dfCopyModel::mimeData(const QModelIndexList &indexes) const
 bool dfCopyModel::dropMimeData(const QMimeData *data,
      Qt::DropAction action, int row, int column, const QModelIndex &parent)
  {
+  //   return QAbstractItemModel::dropMimeData(data,action,row,column,parent);
      if (action == Qt::IgnoreAction)
          return true;
+     dfCopyObj *item;
+     if(!parent.isValid()){
+         item = rootItem;
+     }
+     else
+     {
+        item = static_cast<dfCopyObj*>(parent.internalPointer());
+     }
+	 int insertPt;
+	 if(row == -1){
+		 insertPt = item->childCount();
+	 }
+	 else{
+		 insertPt = row;
+	 }
 
      if (data->hasFormat("image/png"))
      {  
@@ -175,7 +199,8 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
              QImage img;
              img.load(&buffer,"PNG");
 			 dfCopyObj* newObj = new dfCopyObj(DF,img);
-             prependData(newObj);
+             insertDataAtPoint(newObj,insertPt,item);
+//             prependData(newObj);
              return true;
      }
      if(data->hasFormat("text/uri-list"))
@@ -184,7 +209,8 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
          QImage img;
          img.load(file,"PNG");
 		 dfCopyObj * newObj = new dfCopyObj(DF,img);
-         insertDataAtPoint(newObj,row);
+         newObj->setParent(item);
+         insertDataAtPoint(newObj,insertPt,item);
          return true;
      }
      return false;
@@ -195,7 +221,7 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, dfCopyObj *parent)
         parent = rootItem;
     }
     beginInsertRows(QModelIndex(),row+1,row+1);
-    if(row > parent->row()){
+    if(row > parent->childCount()){
         parent->appendChild(data);
     }
     else{
