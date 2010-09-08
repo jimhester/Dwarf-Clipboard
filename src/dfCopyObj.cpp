@@ -231,6 +231,7 @@ void dfCopyObj::addPos(cursorIdx newPos)
 void dfCopyObj::clear(){
     pos[0].x = -30000;
     pos[1].x = -30000;
+    childItems.clear();
 }
 int dfCopyObj::getValid() const{
     int retVal = 0;

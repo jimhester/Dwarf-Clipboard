@@ -112,7 +112,7 @@ Qt::ItemFlags dfCopyModel::flags(const QModelIndex &index) const
          return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled;
 	 dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
 	 if(item->getImage().isNull()){
-		 return defaultFlags | Qt::ItemIsDropEnabled;
+         return defaultFlags | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	 }
      if(index.column() == 0){
          return defaultFlags | Qt::ItemIsDragEnabled; // | Qt::ItemIsDropEnabled;
@@ -157,16 +157,25 @@ QMimeData *dfCopyModel::mimeData(const QModelIndexList &indexes) const
      QMimeData *mimeData = new QMimeData();
      QByteArray encodedData;
      QBuffer buffer(&encodedData);
+     QByteArray encodedData2;
+     QBuffer buffer2(&encodedData2);
      buffer.open(QIODevice::WriteOnly);
+     buffer2.open(QIODevice::WriteOnly);
+     QDataStream out(&buffer2);
      foreach (QModelIndex index, indexes) {
          if (index.isValid()) {
 			 dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
             QImage img = item->getImage();
-            img.save(&buffer,"PNG");
+            if(!img.isNull()){
+                img.save(&buffer,"PNG");
+            }
+            out.writeRawData((const char *)&item,sizeof(item));
          }
      }
-
+     buffer.close();
+    buffer2.close();
      mimeData->setData("image/png", encodedData);
+     mimeData->setData("pointer",encodedData2);
      return mimeData;
  }
 bool dfCopyModel::dropMimeData(const QMimeData *data,
@@ -175,59 +184,82 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
   //   return QAbstractItemModel::dropMimeData(data,action,row,column,parent);
      if (action == Qt::IgnoreAction)
          return true;
-     dfCopyObj *item;
+     dfCopyObj *parent_item;
      if(!parent.isValid()){
-         item = rootItem;
+         parent_item = rootItem;
      }
      else
      {
-        item = static_cast<dfCopyObj*>(parent.internalPointer());
+        parent_item = static_cast<dfCopyObj*>(parent.internalPointer());
      }
 	 int insertPt;
 	 if(row == -1){
-		 insertPt = item->childCount();
+		 insertPt = parent_item->childCount();
 	 }
 	 else{
 		 insertPt = row;
 	 }
-
+     if(data->hasFormat("pointer"))
+     {
+        QByteArray encodedData = data->data("pointer");
+        QBuffer buffer(&encodedData);
+        buffer.open(QIODevice::ReadOnly);
+        QDataStream in(&buffer);
+        while(!in.atEnd())
+        {
+            dfCopyObj *item;
+            in.readRawData((char *)&item,sizeof(item));
+            QModelIndex index = createIndex(item->row(),0,item->parent());
+            beginMoveRows(index,item->row(),item->row(),parent,insertPt);
+            item->parent()->removeChildAt(item->row());
+            item->setParent(parent_item);
+            parent_item->insertChild(insertPt,item);
+            endMoveRows();
+        }
+        buffer.close();
+        //insertDataAtPoint(item,insertPt,parent_item);
+        return true;
+     }
      if (data->hasFormat("image/png"))
      {  
-             QByteArray encodedData = data->data("image/png");
-             QBuffer buffer(&encodedData);
-             buffer.open(QIODevice::ReadOnly);
-             QImage img;
-             img.load(&buffer,"PNG");
-			 dfCopyObj* newObj = new dfCopyObj(DF,img);
-             insertDataAtPoint(newObj,insertPt,item);
+         QByteArray encodedData = data->data("image/png");
+         QBuffer buffer(&encodedData);
+         buffer.open(QIODevice::ReadOnly);
+         QImage img;
+         img.load(&buffer,"PNG");
+		 dfCopyObj* newObj = new dfCopyObj(DF,img);
+         insertDataAtPoint(newObj,insertPt,parent);
 //             prependData(newObj);
-             return true;
+         return true;
      }
      if(data->hasFormat("text/uri-list"))
      {
-         QString file = data->urls().takeFirst().toLocalFile();
-         QImage img;
-         img.load(file,"PNG");
-		 dfCopyObj * newObj = new dfCopyObj(DF,img);
-         newObj->setParent(item);
-         insertDataAtPoint(newObj,insertPt,item);
+         QUrl url;
+         foreach(url, data->urls()){
+             QString file = url.toLocalFile();
+             if(file.endsWith("png",Qt::CaseInsensitive)){
+                QImage img;
+                 img.load(file,"PNG");
+		         dfCopyObj * newObj = new dfCopyObj(DF,img);
+                 insertDataAtPoint(newObj,insertPt,parent);
+            }
+         }
          return true;
      }
      return false;
 }
-bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, dfCopyObj *parent)
+bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &parent)
 {
-    if(parent == NULL){
-        parent = rootItem;
-    }
-    beginInsertRows(QModelIndex(),row+1,row+1);
-    if(row > parent->childCount()){
-        parent->appendChild(data);
+    dfCopyObj* parent_item;
+    if(!parent.isValid()){
+        parent_item = rootItem;
     }
     else{
-		parent->insertChild(row,data);
+        parent_item = static_cast<dfCopyObj*>(parent.internalPointer());
     }
-	data->setParent(parent);
+    beginInsertRows(parent,row,row);
+    parent_item->insertChild(row,data);
+	data->setParent(parent_item);
     endInsertRows();
     return true;
 }
@@ -242,6 +274,15 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, dfCopyObj *parent)
      endInsertRows();
      return true;
  }
+ void dfCopyModel::clear()
+{
+    for (int i = 0; i < rootItem->childCount(); ++i) {
+        dfCopyObj* item = rootItem->child(i);
+        delete item;
+    }
+    rootItem->clear();
+    reset();
+}
  bool dfCopyModel::appendData(dfCopyObj *data, dfCopyObj *parent)
  {
      if(parent == NULL){
@@ -255,10 +296,20 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, dfCopyObj *parent)
  }
 bool dfCopyModel::removeRows ( int row, int count, const QModelIndex & parent ) 
 {
-     beginRemoveRows(QModelIndex(), row, row+count-1);
-     for (int itr = 0; itr < count; ++itr) {
-         rootItem->removeChildAt(row);
-     }
-     endRemoveRows();
-     return true;
+    dfCopyObj* parent_item;
+    if(!parent.isValid()){
+        parent_item = rootItem;
+    }
+    else{
+        parent_item= static_cast<dfCopyObj*>(parent.internalPointer());
+    }
+    
+    beginRemoveRows(parent, row, row+count-1); 
+    for (int itr = 0; itr < count; ++itr) {
+        //dfCopyObj* child_item = parent_item->child(row);
+        parent_item->removeChildAt(row);
+        //delete child_item;
+    }
+    endRemoveRows();
+    return true;
 }

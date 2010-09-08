@@ -14,6 +14,7 @@ class dfCopyModel : public QAbstractItemModel
 public:
     dfCopyModel(DFHack::Context * tDF, QObject *parent = 0);
 	dfCopyModel::~dfCopyModel();
+    void clear();
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role) const;
@@ -29,7 +30,7 @@ public:
 	QMimeData *mimeData(const QModelIndexList &indexes) const;
 	bool dropMimeData(const QMimeData *data,
 	Qt::DropAction action, int row, int column, const QModelIndex &parent);
-	bool insertDataAtPoint(dfCopyObj *data,int row,dfCopyObj *parent = 0);
+    bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &parent = QModelIndex());
 	bool removeRows ( int row, int count, const QModelIndex & parent = QModelIndex() ) ;
 	void mouseDoubleClickEvent ( QMouseEvent * event )  ;
 	QModelIndex index(int row, int column,

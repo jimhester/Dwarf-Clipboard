@@ -61,6 +61,7 @@ private slots:
     void thumbnail_size_changed();
     void copy_to_library();
     void save_library(QDir current=QDir("library"), dfCopyObj* parent=0);
+    void reload_library();
 private:
     void createIconGroupBox();
     void createMessageGroupBox();
@@ -68,7 +69,8 @@ private:
     void createTrayIcon();
     void load_config();
     void setup_views();
-    void load_directory(QString directory,dfCopyObj * parent=0);
+    void remove_directory(QDir current);
+    void load_directory(QString directory=QString("library"),dfCopyObj * parent=0);
 
 
     //DF Stuff

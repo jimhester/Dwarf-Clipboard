@@ -21,7 +21,7 @@
     <normaloff>:/images/dfCopyPaste.png</normaloff>:/images/dfCopyPaste.png</iconset>
   </property>
   <property name="currentIndex">
-   <number>1</number>
+   <number>0</number>
   </property>
   <widget class="QWidget" name="tab_recent">
    <property name="acceptDrops">
@@ -150,6 +150,13 @@ Designations</string>
         <property name="text">
          <string>Save Selected
 To File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_library_reload">
+        <property name="text">
+         <string>Reload Library</string>
         </property>
        </widget>
       </item>

@@ -73,6 +73,7 @@ dfCopyPaste::dfCopyPaste()
     connect(pushButton_library_load, SIGNAL(clicked()),this,SLOT(load()));
     connect(pushButton_recent_paste_designations, SIGNAL(clicked()),this,SLOT(paste_designations()));
     connect(pushButton_library_paste_designations, SIGNAL(clicked()),this,SLOT(paste_designations()));
+    connect(pushButton_library_reload,SIGNAL(clicked()),this,SLOT(reload_library()));
 
     connect(copyShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(copy_shortcut_changed()));
     connect(pasteDesignationShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(paste_designation_shortcut_changed()));
@@ -116,23 +117,41 @@ void dfCopyPaste::copy_to_library()
     }
     setup_views();
 }
+void dfCopyPaste::remove_directory(QDir current)
+{
+    QImage img;
+    QString fileName;
+    QFileInfo file;
+    foreach(file, current.entryInfoList(QDir::NoFilter,QDir::DirsFirst | QDir::Name))
+    {
+        if(file.isDir() && file.fileName()!= "." && file.fileName() != "..")
+        {
+            remove_directory(QDir(file.filePath()));
+            current.rmdir(file.absoluteFilePath());
+        }
+        else{
+            current.remove(file.absoluteFilePath());
+        }
+    }
+}    
 
 void dfCopyPaste::save_library(QDir current, dfCopyObj* parent)
 {
-    if(parent == NULL){
+    if(parent == NULL){ //start of the save
         parent = libraryModel->getRoot();
+        remove_directory(current);
     }
     dfCopyObj* child;
     for(int i = 0;i < parent->childCount();i++){
         child = parent->child(i);
         if(child->getImage().isNull()){
             current.mkpath(current.absolutePath() + "/" + child->getName());
-         //   current.cd(current.absolutePath() + "/" + child->getName());
-            save_library(current,child);
+            QDir newDir(current.absolutePath() + "/" + child->getName());
+            save_library(newDir,child);
         }
         else{
             QImage img = child->getImage();
-            img.save(current.absolutePath() + child->getName() + ".png");
+            img.save(current.absolutePath() +"/"+ child->getName() + ".png");
         }
     }
 }         
@@ -190,11 +209,11 @@ void dfCopyPaste::delete_selected()
         select_model = treeView_library->selectionModel();
         model = libraryModel;
     }
-    
-    foreach(idx, select_model->selectedRows())
-    {
-        model->removeRow(idx.row());
-//        selectRow(idx.row());
+    QModelIndexList selected = select_model->selectedRows();
+    while(!selected.empty()){
+        idx = selected.takeFirst();
+        model->removeRow(idx.row(),idx.parent());
+        selected = select_model->selectedRows();
     }
 }
 void dfCopyPaste::save()
@@ -252,6 +271,11 @@ void dfCopyPaste::load()
         model->prependData(data);
     }
     setup_views();
+}
+void dfCopyPaste::reload_library()
+{
+    libraryModel->clear();
+    load_directory("library");
 }
 void dfCopyPaste::load_directory(QString directory,dfCopyObj * parent)
 {
