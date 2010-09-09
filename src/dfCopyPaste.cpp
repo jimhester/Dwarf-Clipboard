@@ -28,15 +28,16 @@
 #include <QtGui>
 #include <QtDebug>
 
-#include "inc\dfCopyPaste.h"
-#include "inc\dfCopyPastePng.h"
+#include "inc/dfCopyPaste.h"
+#include "inc/dfCopyPastePng.h"
 #include "ui_dfCopyPaste.h"
 #include <QxtGlobalShortcut>
 #include <QTextStream>
 #define DFHACK_WANT_MISCUTILS
 #define DFHACK_WANT_TILETYPES
-#include "inc\DFHack.h"
+#include "inc/DFHack.h"
 #include "dfhack/modules/WindowIO.h"
+#include "inc/getShortcutDialog.h"
 
 dfCopyPaste::dfCopyPaste()
 {
@@ -75,10 +76,12 @@ dfCopyPaste::dfCopyPaste()
     connect(pushButton_library_paste_designations, SIGNAL(clicked()),this,SLOT(paste_designations()));
     connect(pushButton_library_reload,SIGNAL(clicked()),this,SLOT(reload_library()));
 
-    connect(copyShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(copy_shortcut_changed()));
-    connect(pasteDesignationShortcutLineEdit,SIGNAL(editingFinished()),this,SLOT(paste_designation_shortcut_changed()));
+	connect(copyShortcutButton,SIGNAL(clicked()),this,SLOT(get_copy_shortcut()));
+	connect(pasteDesignationShortcutButton,SIGNAL(clicked()),this,SLOT(get_paste_designation_shortcut()));
     connect(thumbnailSizeLineEdit,SIGNAL(editingFinished()),this,SLOT(thumbnail_size_changed()));
     connect(inputDelayMsLineEdit,SIGNAL(editingFinished()),this,SLOT(input_delay_changed()));
+	connect(tilesetPathButton,SIGNAL(clicked()),this,SLOT(get_tileset_path()));
+	connect(colorsPathButton,SIGNAL(clicked()),this,SLOT(get_colors_path()));
 
     connect(pushButton_to_library,SIGNAL(clicked()),this,SLOT(copy_to_library()));
     
@@ -92,8 +95,8 @@ dfCopyPaste::dfCopyPaste()
     setup_views();
     tableView_recent->verticalHeader()->setDefaultSectionSize(thumbnail_size+1);
     tableView_recent->horizontalHeader()->setDefaultSectionSize(thumbnail_size+7);
-    copyShortcutLineEdit->setText(copy_shortcut->shortcut().toString());
-    pasteDesignationShortcutLineEdit->setText(paste_designation_shortcut->shortcut().toString());
+    copyShortcutButton->setText(copy_shortcut->shortcut().toString());
+    pasteDesignationShortcutButton->setText(paste_designation_shortcut->shortcut().toString());
     thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnail_size));
     inputDelayMsLineEdit->setText(QString("%1").arg(input_delay));
 
@@ -164,18 +167,19 @@ void dfCopyPaste::setup_views()
     treeView_library->setIconSize(QSize(thumbnail_size,thumbnail_size));
     treeView_library->resizeColumnToContents(0);
 }
-void dfCopyPaste::paste_designation_shortcut_changed()
+void dfCopyPaste::get_paste_designation_shortcut()
 {
-    QKeySequence seq(pasteDesignationShortcutLineEdit->text());
+  /*  QKeySequence seq(pasteDesignationShortcutButton->text());
     if(!seq.isEmpty()){
         paste_designation_shortcut->setShortcut(seq);
-    }
+    }*/
 }
-void dfCopyPaste::copy_shortcut_changed()
+void dfCopyPaste::get_copy_shortcut()
 {
-    QKeySequence seq(copyShortcutLineEdit->text());
+	QKeySequence seq = getShortcutDialog::getKeySequence(this);
     if(!seq.isEmpty()){
         copy_shortcut->setShortcut(seq);
+		copyShortcutButton->setText(copy_shortcut->shortcut().toString());
     }
 }
 void dfCopyPaste::input_delay_changed()

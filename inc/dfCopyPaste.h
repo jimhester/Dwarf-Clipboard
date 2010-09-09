@@ -54,8 +54,8 @@ private slots:
     void save();
     void load();
     void delete_selected();
-    void copy_shortcut_changed();
-    void paste_designation_shortcut_changed();
+    void get_copy_shortcut();
+    void get_paste_designation_shortcut();
     void save_and_quit();
     void input_delay_changed();
     void thumbnail_size_changed();
