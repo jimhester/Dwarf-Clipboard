@@ -4,7 +4,7 @@ HEADERS += inc/*.h
 
 RESOURCES += dfCopyPaste.qrc
 
-FORMS += dfCopyPaste.ui
+FORMS += dfCopyPaste.ui editWidget.ui
 
 CONFIG += qt
 CONFIG  += qxt

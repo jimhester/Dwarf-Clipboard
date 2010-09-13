@@ -45,14 +45,33 @@ dfCopyPaste::dfCopyPaste()
     setupUi(this);
     createActions();
     createTrayIcon();
+	createShortcuts();
+	createConnections();
+	load_config();
     connectToDF();
-
     input_delay = 100;
     thumbnail_size = 64;
+    
+    recentModel = new dfCopyModel(DF);
+    tableView_recent->setModel(recentModel);
+    libraryModel = new dfCopyModel(DF);
+    treeView_library->setModel(libraryModel);
+    load_directory("library");
+    setup_views();
+    thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnail_size));
+    inputDelayMsLineEdit->setText(QString("%1").arg(input_delay));
 
-    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-            this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
+	tilesetPathButton->setText(dfCopyPastePng::getTileSetPath());
+	colorPathButton->setText(dfCopyPastePng::getColorPath());
 
+    trayIcon->setIcon(QIcon(":/icons/images/dfCopyPaste.png"));
+    trayIcon->show();
+
+    setWindowTitle(tr("dfCopyPaste"));
+    prevCursor.x = -30000;
+}
+void dfCopyPaste::createShortcuts()
+{
     copy_shortcut = new QxtGlobalShortcut(this);
     connect(copy_shortcut, SIGNAL(activated()), this, SLOT(copy()));
     copy_shortcut->setShortcut(QKeySequence("Ctrl+Shift+C"));
@@ -64,10 +83,13 @@ dfCopyPaste::dfCopyPaste()
     QShortcut* delete_shortcut = new QShortcut(this);
     delete_shortcut->setKey(QKeySequence(QKeySequence::Delete));
     connect(delete_shortcut, SIGNAL(activated()),this,SLOT(delete_selected()));
+}
 
-    load_config();
-
-    connect(pushButton_recent_save, SIGNAL(clicked()),this,SLOT(save()));
+void dfCopyPaste::createConnections()
+{
+	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+            this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
+	connect(pushButton_recent_save, SIGNAL(clicked()),this,SLOT(save()));
     connect(pushButton_recent_load, SIGNAL(clicked()),this,SLOT(load()));
     connect(pushButton_library_save_selected, SIGNAL(clicked()),this,SLOT(save()));
     connect(pushButton_library_save,SIGNAL(clicked()),this,SLOT(save_library()));
@@ -80,31 +102,17 @@ dfCopyPaste::dfCopyPaste()
 	connect(pasteDesignationShortcutButton,SIGNAL(clicked()),this,SLOT(get_paste_designation_shortcut()));
     connect(thumbnailSizeLineEdit,SIGNAL(editingFinished()),this,SLOT(thumbnail_size_changed()));
     connect(inputDelayMsLineEdit,SIGNAL(editingFinished()),this,SLOT(input_delay_changed()));
-	connect(tilesetPathButton,SIGNAL(clicked()),this,SLOT(get_tileset_path()));
-	connect(colorsPathButton,SIGNAL(clicked()),this,SLOT(get_colors_path()));
+	connect(tilesetPathButton,SIGNAL(clicked()),this,SLOT(get_tileset_path_user()));
+	connect(colorPathButton,SIGNAL(clicked()),this,SLOT(get_color_path_user()));
+	connect(tilesetPathToolButton,SIGNAL(clicked()),this,SLOT(get_tileset_path_df()));
+	connect(colorPathToolButton,SIGNAL(clicked()),this,SLOT(get_color_path_df()));
 
     connect(pushButton_to_library,SIGNAL(clicked()),this,SLOT(copy_to_library()));
-    
-    recentModel = new dfCopyModel(DF);
-    tableView_recent->setIconSize(QSize(thumbnail_size,thumbnail_size));
-    tableView_recent->setModel(recentModel);
-    libraryModel = new dfCopyModel(DF);
-    treeView_library->setModel(libraryModel);
-    tableView_recent->setIconSize(QSize(thumbnail_size,thumbnail_size));
-    load_directory("library");
-    setup_views();
-    tableView_recent->verticalHeader()->setDefaultSectionSize(thumbnail_size+1);
-    tableView_recent->horizontalHeader()->setDefaultSectionSize(thumbnail_size+7);
-    copyShortcutButton->setText(copy_shortcut->shortcut().toString());
-    pasteDesignationShortcutButton->setText(paste_designation_shortcut->shortcut().toString());
-    thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnail_size));
-    inputDelayMsLineEdit->setText(QString("%1").arg(input_delay));
-
-    trayIcon->setIcon(QIcon(":/images/dfCopyPaste.png"));
-    trayIcon->show();
-
-    setWindowTitle(tr("dfCopyPaste"));
-    prevCursor.x = -30000;
+	connect(useOriginalTilesetImagesCheckBox,SIGNAL(stateChanged(int)),this,SLOT(useOriginal(int)));
+}
+void dfCopyPaste::useOriginal(int state)
+{
+	dfCopyObj::setOriginalState(state);
 }
 void dfCopyPaste::copy_to_library()
 {
@@ -153,7 +161,7 @@ void dfCopyPaste::save_library(QDir current, dfCopyObj* parent)
             save_library(newDir,child);
         }
         else{
-            QImage img = child->getImage();
+            QImage img = child->getTiledImages();
             img.save(current.absolutePath() +"/"+ child->getName() + ".png");
         }
     }
@@ -169,10 +177,11 @@ void dfCopyPaste::setup_views()
 }
 void dfCopyPaste::get_paste_designation_shortcut()
 {
-  /*  QKeySequence seq(pasteDesignationShortcutButton->text());
+	QKeySequence seq = getShortcutDialog::getKeySequence(this);
     if(!seq.isEmpty()){
         paste_designation_shortcut->setShortcut(seq);
-    }*/
+		pasteDesignationShortcutButton->setText(paste_designation_shortcut->shortcut().toString());
+    }
 }
 void dfCopyPaste::get_copy_shortcut()
 {
@@ -182,10 +191,43 @@ void dfCopyPaste::get_copy_shortcut()
 		copyShortcutButton->setText(copy_shortcut->shortcut().toString());
     }
 }
+void dfCopyPaste::get_tileset_path_user()
+{
+	QString newPath = QFileDialog::getOpenFileName(this,"Select Tileset to Use",dfCopyPastePng::getTileSetPath(),"Images (*.png *.bmp)");
+	dfCopyPastePng::setTileSetPath(newPath);
+	tilesetPathButton->setText(dfCopyPastePng::getTileSetPath());
+    recalcAllDfCopyObj();
+}
+void dfCopyPaste::get_color_path_user()
+{
+	QString newPath = QFileDialog::getOpenFileName(this,"Select Color file",dfCopyPastePng::getColorPath(),"Color Files (*.txt)");
+	dfCopyPastePng::setColorPath(newPath);
+	colorPathButton->setText(dfCopyPastePng::getColorPath());
+    recalcAllDfCopyObj();
+}
+void dfCopyPaste::recalcAllDfCopyObj()
+{
+    recalcDfCopyObj(recentModel->getRoot());
+    recalcDfCopyObj(libraryModel->getRoot());
+}
+void dfCopyPaste::recalcDfCopyObj(dfCopyObj* item)
+{
+    item->recalcImages();
+    for(int i =0;i<item->childCount();++i)
+    {
+        recalcDfCopyObj(item->child(i));
+    }
+}
+void dfCopyPaste::get_tileset_path_df()
+{
+}
+void dfCopyPaste::get_color_path_df()
+{
+}
 void dfCopyPaste::input_delay_changed()
 {
     input_delay = inputDelayMsLineEdit->text().toInt();
-    dfCopyPastePng::delay = input_delay;
+    dfCopyPastePng::setDelay(input_delay);
 }
 void dfCopyPaste::thumbnail_size_changed()
 {
@@ -199,16 +241,16 @@ void dfCopyPaste::delete_selected()
     QItemSelectionModel* select_model;
     QModelIndex idx;
     dfCopyModel* model;
-    if(currentIndex() > 1 || currentIndex() < 0)
+    if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0)
     {
         return;
     }
-    if(currentIndex() == 0)
+    if(TabWidget->currentIndex() == 0)
     {
         select_model = tableView_recent->selectionModel();
         model = recentModel;
     }
-    if(currentIndex() == 1)
+    if(TabWidget->currentIndex() == 1)
     {
         select_model = treeView_library->selectionModel();
         model = libraryModel;
@@ -224,15 +266,15 @@ void dfCopyPaste::save()
 {
     QItemSelectionModel* select_model;
     QModelIndex idx;
-    if(currentIndex() > 1 || currentIndex() < 0)
+    if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0)
     {
         return;
     }
-    if(currentIndex() == 0)
+    if(TabWidget->currentIndex() == 0)
     {
         select_model = tableView_recent->selectionModel();
     }
-    if(currentIndex() == 1)
+    if(TabWidget->currentIndex() == 1)
     {
         select_model = treeView_library->selectionModel();
     }
@@ -244,7 +286,7 @@ void dfCopyPaste::save()
             QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
                                 ".",
                                 tr("Png Images (*.png)"));
-            QImage img = item->getImage();
+            QImage img = item->getTiledImages();
             img.save(fileName);
         }
     }
@@ -254,13 +296,13 @@ void dfCopyPaste::load()
     QImage img;
     QString fileName;
     dfCopyModel* model;
-    if(currentIndex() > 1 || currentIndex() < 0){
+    if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0){
         return;
     }
-    if(currentIndex() == 0){
+    if(TabWidget->currentIndex() == 0){
         model = recentModel;
     }
-    if(currentIndex() == 1){
+    if(TabWidget->currentIndex() == 1){
         model = libraryModel;
     }
     foreach(fileName,QFileDialog::getOpenFileNames(this, tr("Open File"),
@@ -412,13 +454,13 @@ void dfCopyPaste::paste_designations()
 {
 
     QModelIndex idx;
-    if(currentIndex() > 1 || currentIndex() < 0){
+    if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0){
         return;
     }
-    if(currentIndex() == 0){
+    if(TabWidget->currentIndex() == 0){
         idx = tableView_recent->currentIndex();
     }
-    if(currentIndex() == 1){
+    if(TabWidget->currentIndex() == 1){
         idx = treeView_library->currentIndex();
     }
 	if(idx.isValid()){
@@ -483,7 +525,7 @@ void dfCopyPaste::load_config()
         inFile.open(QIODevice::ReadOnly);
         QTextStream in(&inFile);
         while(!in.atEnd()){
-            QStringList list = in.readLine().split(':');
+            QStringList list = in.readLine().split(';');
             if (list.at(0) == "copy")
             {
                 copy_shortcut->setShortcut(QKeySequence(list.at(1)));
@@ -500,6 +542,14 @@ void dfCopyPaste::load_config()
             {
                 input_delay = list.at(1).toInt();
             }
+			else if(list.at(0) == "tileset_path")
+			{
+				dfCopyPastePng::setTileSetPath(list.at(1));
+			}
+			else if(list.at(0) == "color_path")
+			{
+				dfCopyPastePng::setColorPath(list.at(1));
+			}
         }
         inFile.close();
     }
@@ -511,10 +561,12 @@ void dfCopyPaste::save_and_quit()
     QFile outFile("config.ini");
     outFile.open(QIODevice::WriteOnly);
     QTextStream out(&outFile);
-    out << "copy:" << copy_shortcut->shortcut().toString() << '\n';
-    out << "paste_designation:" << paste_designation_shortcut->shortcut().toString() << '\n';
-    out << "thumbnail_size:" << thumbnail_size << '\n';
-    out << "input_delay:" << input_delay << '\n';
+    out << "copy;" << copy_shortcut->shortcut().toString() << '\n';
+    out << "paste_designation;" << paste_designation_shortcut->shortcut().toString() << '\n';
+    out << "thumbnail_size;" << thumbnail_size << '\n';
+    out << "input_delay;" << input_delay << '\n';
+	out << "tileset_path;" << dfCopyPastePng::getTileSetPath() << '\n';
+	out << "color_path;" << dfCopyPastePng::getColorPath() << '\n';
     outFile.close();
     qApp->quit();
 }

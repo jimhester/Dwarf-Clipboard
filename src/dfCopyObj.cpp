@@ -1,6 +1,8 @@
 #include "inc\dfCopyObj.h"
 #include "inc\common.h"
+#include <QPainter>
 
+bool dfCopyObj::useOriginal = false;
 dfCopyObj::dfCopyObj(DFHack::Context *tDF,dfCopyObj *parent)
 {
     setDF(tDF);
@@ -8,6 +10,7 @@ dfCopyObj::dfCopyObj(DFHack::Context *tDF,dfCopyObj *parent)
     temp.x = temp.y = temp.z = -30000;
     pos << temp << temp;
     idx = 0;
+    defaultIndex = 0;
 	parentItem = parent;
 }
 
@@ -19,6 +22,7 @@ dfCopyObj::dfCopyObj(DFHack::Context *tDF,cursorIdx c1, cursorIdx c2, dfCopyObj 
     getDataFromDF();
     writeImages();
     idx = 0;
+    defaultIndex = 0;
 	parentItem = parent;
 }
 dfCopyObj::dfCopyObj(DFHack::Context *tDF,QImage img,dfCopyObj *parent)
@@ -32,10 +36,82 @@ dfCopyObj::dfCopyObj(DFHack::Context *tDF,QImage img,dfCopyObj *parent)
     Comment = img.text("comment");
     setTextForImages();
 	parentItem = parent;
+	originalImages = imageListFromTiledImages(img);
+    defaultIndex = 0;
+}
+void dfCopyObj::recalcImages()
+{   
+    if(images.empty()) 
+        return;
+    dfCopyPastePng png(DF);
+    images = png.ImagesFromString(images.at(0).text("rawNumbers"));
+}
+QList<QImage> dfCopyObj::imageListFromTiledImages(const QImage &image)
+{
+    QList<QImage> retList;
+    QStringList dimensions;      
+    dimensions = image.text("rawNumbers").left(image.text("rawNumbers").indexOf("|")).split(',',QString::SkipEmptyParts);
+    int tileWidth = image.width()/dimensions[0].toInt();
+    int tileHeight = image.height()/dimensions[1].toInt()/dimensions[2].toInt();
+    for(int zIdx = 0;zIdx < dimensions[2].toInt();++zIdx)
+    {
+        QImage test = image.copy(QRect(0,dimensions[1].toInt()*tileHeight*zIdx,tileWidth*dimensions[0].toInt(),tileHeight*dimensions[1].toInt()));
+        retList.append(test);
+    }
+    return retList;
+}
+QImage dfCopyObj::getImage(int z) const
+{ 
+    if(z == -1)
+    { 
+        z = defaultIndex; 
+    } 
+    if(useOriginal && !originalImages.empty())
+    { 
+        return originalImages.at(z); 
+    } 
+    else 
+    { 
+        if(images.empty())
+        {
+            return QImage();
+        } 
+        return images.at(z); 
+    } 
+}
+QImage dfCopyObj::getTiledImages() const
+{
+    if(originalImages.empty())
+    {
+        return QImage();
+    }
+    QImage result(originalImages.at(0).width(),originalImages.at(0).height()*originalImages.size(),QImage::Format_ARGB32);
+    QString key;
+    foreach(key,originalImages.at(0).textKeys()){
+        result.setText(key,originalImages.at(0).text(key));
+    }
+    QPainter paint(&result);
+    for(int i = 0;i<originalImages.size();i++)
+    {
+        paint.drawImage(0,i*originalImages.at(0).height(),originalImages.at(i));
+    }
+    paint.end();
+    return result;
 }
 dfCopyObj::~dfCopyObj()
 {
 	qDeleteAll(childItems);
+}
+void dfCopyObj::setOriginalState(int state)
+{ 
+	if(state)
+	{
+		useOriginal = true; 
+	}
+	else
+	{ 
+		useOriginal = false;
+	}
 }
 void dfCopyObj::appendChild(dfCopyObj *item)
 {
@@ -76,6 +152,7 @@ void dfCopyObj::writeImages()
     dfCopyPastePng png(DF);
     images = png.getImagesForRange(pos);
     setTextForImages();
+	originalImages = images;
 }
 void dfCopyObj::setTextForImages()
 {    
@@ -114,6 +191,7 @@ void dfCopyObj::getDataFromDF()
 }
 void dfCopyObj::checkDig(int32_t tileType, cursorIdx current, cursorIdx begin)
 {
+    if(tileType < 0 || tileType > 519)return;
     if(DFHack::isOpenTerrain(tileType) || DFHack::isFloorTerrain(tileType)) {dig[begin.z - current.z][current.y - begin.y][current.x - begin.x] = "d";} 
     else if(DFHack::STAIR_DOWN == DFHack::tileTypeTable[tileType].c){ dig [begin.z - current.z][current.y - begin.y][current.x - begin.x] = "j"; }
     else if(DFHack::STAIR_UP == DFHack::tileTypeTable[tileType].c){ dig [begin.z - current.z][current.y - begin.y][current.x - begin.x] = "u"; }

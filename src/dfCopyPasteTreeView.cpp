@@ -21,17 +21,14 @@ bool dfCopyPasteTreeView::edit ( const QModelIndex & index, EditTrigger trigger,
     }
     if(index.column() == 0 && trigger & editTriggers())
     {
-        editWin->resize(img.size());
-        editWin->setWindowTitle(item->getName());
-        editWin->setPixmap(QPixmap::fromImage(img));
+		editWin->setCopyObj(item);
         editWin->show();
         return true;
     }
-    if(editWin->isEnabled())
+    if(editWin->isVisible())
     {
-        editWin->resize(img.size());
-        editWin->setWindowTitle(item->getName());
-        editWin->setPixmap(QPixmap::fromImage(img));
+		editWin->setCopyObj(item);
+        editWin->show();
     }
     return QAbstractItemView::edit(index,trigger,event);
 }

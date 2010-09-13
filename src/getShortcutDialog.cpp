@@ -2,15 +2,18 @@
 #include <QKeySequence>
 #include <QKeyEvent>
 #include <QLabel>
+#include <QBoxLayout>
 
 getShortcutDialog::getShortcutDialog(QWidget* parent) : QDialog(parent)
 {
 	setFocusPolicy(Qt::StrongFocus);
-	label = new QLabel(this);
-	setContextMenuPolicy(Qt::NoContextMenu);
+	label = new QLabel();
 	setWindowFlags(Qt::Popup);
+	layout = new QHBoxLayout(this);
 	label->setText("Press Keys For New Shortcut");
-	label->show();
+	layout->addWidget(label);
+//	setGeometry(0,0,64,64);
+	setLayout(layout);
 }
 QKeySequence getShortcutDialog::getKeySequence(QWidget *parent)
 {

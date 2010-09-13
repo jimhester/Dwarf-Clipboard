@@ -55,6 +55,7 @@ cursorIdx dfLocationIterator::begin(){
 }
 cursorIdx dfLocationIterator::end(){
     currentPos = pos[1];
+    currentPos.z = pos[0].z;
     currentTile = tile[1];
     currentBlockPos.x = pos[1].x % 16;
     currentBlockPos.y = pos[1].y % 16;

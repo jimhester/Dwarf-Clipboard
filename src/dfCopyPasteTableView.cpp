@@ -9,19 +9,16 @@ bool dfCopyPasteTableView::edit ( const QModelIndex & index, EditTrigger trigger
     if(index.column() == 0 && trigger & editTriggers()){
         dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
         QImage img = item->getImage();
-        editWin->resize(img.size());
-        editWin->setWindowTitle(item->getName());
-        editWin->setPixmap(QPixmap::fromImage(img));
+        editWin->setCopyObj(item);
         editWin->show();
         return true;
     }
     else{
-        if(editWin->isEnabled()){
+        if(editWin->isVisible()){
             dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
             QImage img = item->getImage();
-            editWin->resize(img.size());
-            editWin->setWindowTitle(item->getName());
-            editWin->setPixmap(QPixmap::fromImage(img));
+       		editWin->setCopyObj(item);
+            editWin->show();
         }
         return QAbstractItemView::edit(index,trigger,event);
     }

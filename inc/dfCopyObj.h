@@ -32,6 +32,10 @@ private:
     QString Comment;
 	QList<dfCopyObj*> childItems;
 	dfCopyObj *parentItem;
+    QList<QImage> imageListFromTiledImages(const QImage &image);
+    int defaultIndex;
+    static bool useOriginal;
+	QList<QImage> originalImages;
 public:
 	dfCopyObj::~dfCopyObj();
 	void appendChild(dfCopyObj *child);
@@ -45,14 +49,19 @@ public:
     dfCopyObj(DFHack::Context *tDF, dfCopyObj *parent = 0);
     dfCopyObj(DFHack::Context *tDF, cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
     dfCopyObj(DFHack::Context *tDF, QImage img,dfCopyObj *parent = 0);
+	static void setOriginalState(int state);
     void setDF(DFHack::Context *tDF);
-    QVector<QVector<QVector<QString > > > getDig(){ return dig; };
-    QVector<QVector<QVector<QString > > > getBuild(){ return build; };
+    QVector<QVector<QVector<QString > > > getDig() const { return dig; };
+    QVector<QVector<QVector<QString > > > getBuild() const { return build; } ;
     void addPos(cursorIdx pos);
     int getValid ()const;
     QString printDig (QChar sep = ' ')const;
     void clear();
-    QImage getImage(int z = 0) const { if( images.size() == 0) return QImage(); else return images.at(z); };
+    void setDefaultIndex(int newIdx) { defaultIndex = newIdx;};
+    int getDefaultIndex() { return defaultIndex; };
+    QImage getImage(int z = -1) const;
+    QImage getTiledImages() const;
+	int getImageCount() const { return images.size(); };
     QString getName()const { return Name;};
     QString getComment()const { return Comment; };
     void setName(QString n);
@@ -60,5 +69,6 @@ public:
 	void setParent(dfCopyObj *parent){ parentItem = parent; };
     QList<cursorIdx> getRange()const { return pos; };
     void paste(cursorIdx location);
+    void recalcImages();
 };
 #endif

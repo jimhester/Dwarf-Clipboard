@@ -11,16 +11,47 @@
 #include <QDebug>
 
 int dfCopyPastePng::delay = 100;
+int dfCopyPastePng::tileWidth = 16;
+int dfCopyPastePng::tileHeight = 16;
+QImage* dfCopyPastePng::tileSet = NULL;
+QMap<QString,QColor> dfCopyPastePng::colorMap;
+QString dfCopyPastePng::tileSetPath = "C:/DF/versions/windows/df_31_12_win/data/art/curses_square_16x16.png";
+QString dfCopyPastePng::colorPath = "C:/DF/versions/windows/df_31_12_win/data/init/colors.txt";
 
 dfCopyPastePng::dfCopyPastePng(DFHack::Context * DFPtr)
 {
     DF = DFPtr;
-    QString Path("C:/NCF/DF/versions/windows/df_31_12_win/data/art/curses_square_16x16.png");
-    tileSet = new QImage(Path);
+	setTileSetPath(tileSetPath);
+	setColorPath(colorPath);
+}
+void dfCopyPastePng::setDelay(int newDelay)
+{ 
+	delay = newDelay;
+}
+void dfCopyPastePng::setTileSetPath(QString newPath)
+{ 
+	if(tileSet)
+	{
+		delete tileSet;
+	}
+	tileSetPath = newPath;
+	tileSet = new QImage(tileSetPath);
     tileWidth = tileSet->width()/16;
     tileHeight = tileSet->height()/16;
-    QString Path2("C:/NCF/DF/versions/windows/df_31_12_win/data/init/colors.txt");
-    readConfig(Path2);
+}
+void dfCopyPastePng::setColorPath(QString newPath)
+{ 
+	colorPath = newPath;
+	colorMap.clear();
+	readConfig(colorPath);
+}
+QString dfCopyPastePng::getColorPath()
+{
+	return colorPath;
+}
+QString dfCopyPastePng::getTileSetPath()
+{
+	return tileSetPath;
 }
 QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range)
 {
@@ -50,7 +81,7 @@ QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range)
         QVector<QVector<QString> > rawNumbers(size.x,QVector<QString>(size.y));
         for(int xIdx = 0;xIdx < int(size.x/effectiveWidth)+1;xIdx++){
             for(int yIdx=0;yIdx < int(size.y/effectiveHeight)+1;yIdx++){
-                Pos->setViewCoords(begin.x+xIdx*effectiveWidth,begin.y+yIdx*effectiveHeight,begin.z);
+                Pos->setViewCoords(begin.x+xIdx*effectiveWidth,begin.y+yIdx*effectiveHeight,begin.z-zitr);
                 Win->TypeSpecial(DFHack::WAIT,1,delay);
                 Pos->getScreenTiles(screenWidth,screenHeight,screen);
                 int ylim = effectiveHeight;
@@ -77,12 +108,12 @@ QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range)
         }
         rawComplete.append("|");
     }
+    Pos->setViewCoords(oldPosition.x,oldPosition.y,oldPosition.z);
+    Pos->setCursorCoords(oldCursor.x,oldCursor.y,oldCursor.z);
     retImages = ImagesFromString(rawComplete); // this is a little weird, but it will be easier to only have to debug one way to get the images
     for(int itr = 0;itr<retImages.size();itr++){
         retImages[itr].setText("rawNumbers",rawComplete);
     }
-    Pos->setViewCoords(oldPosition.x,oldPosition.y,oldPosition.z);
-    Pos->setCursorCoords(oldCursor.x,oldCursor.y,oldCursor.z);
     delete screen;
     return(retImages);
 }

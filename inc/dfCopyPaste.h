@@ -2,14 +2,13 @@
 #define dfCopyPaste_H
 
 #include <QSystemTrayIcon>
-#include <QWidget>
+#include <QMainWindow>
 #include <QDir>
 #include "common.h"
 #include "dfCopyObj.h"
 #include "dfCopyModel.h"
 #include "ui_dfCopyPaste.h"
 
-class Ui_TabWidget;
 class QListView;
 class QTableView;
 class QAction;
@@ -32,7 +31,7 @@ namespace DFHack{
     class Maps;
 }
 
-class dfCopyPaste : public QTabWidget, private Ui::TabWidget
+class dfCopyPaste : public QMainWindow, private Ui::MainWindow
 {
     Q_OBJECT
 
@@ -56,21 +55,30 @@ private slots:
     void delete_selected();
     void get_copy_shortcut();
     void get_paste_designation_shortcut();
+	void get_tileset_path_user();
+	void get_color_path_user();
+	void get_tileset_path_df();
+	void get_color_path_df();
     void save_and_quit();
     void input_delay_changed();
     void thumbnail_size_changed();
     void copy_to_library();
     void save_library(QDir current=QDir("library"), dfCopyObj* parent=0);
     void reload_library();
+	void useOriginal(int state);
 private:
     void createIconGroupBox();
     void createMessageGroupBox();
     void createActions();
     void createTrayIcon();
+	void createConnections();
+	void createShortcuts();
     void load_config();
     void setup_views();
     void remove_directory(QDir current);
     void load_directory(QString directory=QString("library"),dfCopyObj * parent=0);
+    void recalcAllDfCopyObj();
+    void recalcDfCopyObj(dfCopyObj* item);
 
 
     //DF Stuff
@@ -106,7 +114,6 @@ private:
     int input_delay;
     int thumbnail_size;
 
-    Ui_TabWidget * testWindow;
     dfCopyModel * recentModel;
     dfCopyModel * libraryModel;
 
