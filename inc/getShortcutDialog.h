@@ -4,8 +4,7 @@
 class QLabel;
 class QHBoxLayout;
 
-class getShortcutDialog :public QDialog
-{
+class getShortcutDialog :public QDialog{
 private:
 	void keyPressEvent ( QKeyEvent * event );
 	QKeySequence * sequence;

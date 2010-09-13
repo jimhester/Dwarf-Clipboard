@@ -3,8 +3,7 @@
 #include "inc\dfCopyModel.h"
 #include <QMouseEvent>
 
-bool dfCopyPasteTreeView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
-{
+bool dfCopyPasteTreeView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event ){
     if(!index.isValid())
     {
         return QAbstractItemView::edit(index,trigger,event);
@@ -32,8 +31,7 @@ bool dfCopyPasteTreeView::edit ( const QModelIndex & index, EditTrigger trigger,
     }
     return QAbstractItemView::edit(index,trigger,event);
 }
-void dfCopyPasteTreeView::mouseDoubleClickEvent(QMouseEvent *event)
-{
+void dfCopyPasteTreeView::mouseDoubleClickEvent(QMouseEvent *event){
     QModelIndex index = indexAt(event->pos());
     if(index.isValid())
     {

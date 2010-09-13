@@ -2,8 +2,7 @@
 #include "inc/dfCopyObj.h"
 #include <QDebug>
 
-dfCopyPasteEditWidget::dfCopyPasteEditWidget(QWidget *parent) : QWidget(parent)
-{
+dfCopyPasteEditWidget::dfCopyPasteEditWidget(QWidget *parent) : QWidget(parent){
 	setupUi(this);
     scene = new QGraphicsScene();
     graphicsView->setScene(scene);
@@ -11,8 +10,7 @@ dfCopyPasteEditWidget::dfCopyPasteEditWidget(QWidget *parent) : QWidget(parent)
     horizontalLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 	connect(verticalSlider,SIGNAL(valueChanged(int)),this,SLOT(update_image(int)));
 }
-void dfCopyPasteEditWidget::setCopyObj(dfCopyObj * newObj)
-{
+void dfCopyPasteEditWidget::setCopyObj(dfCopyObj * newObj){
 	obj = newObj;
     scene->clear();
     QImage img = obj->getImage(obj->getDefaultIndex());
@@ -23,8 +21,7 @@ void dfCopyPasteEditWidget::setCopyObj(dfCopyObj * newObj)
     verticalSlider->setValue(obj->getImageCount()-obj->getDefaultIndex()-1);
     setWindowTitle(obj->getName());
 }
-void dfCopyPasteEditWidget::update_image(int position)
-{
+void dfCopyPasteEditWidget::update_image(int position){
     QImage img = obj->getImage(obj->getImageCount()-position-1);
     scene->setSceneRect(QRect(QPoint(0,0),img.size()));
     scene->addPixmap(QPixmap::fromImage(img));

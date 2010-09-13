@@ -8,8 +8,7 @@
 
 class dfCopyObj;
 
-class dfCopyPastePng
-{
+class dfCopyPastePng{
 public:
     dfCopyPastePng(DFHack::Context * DFPtr);
     QImage getTileSet(){ return *tileSet; };

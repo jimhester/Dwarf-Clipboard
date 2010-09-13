@@ -9,16 +9,13 @@
 #include <QUrl>
 
 dfCopyModel::dfCopyModel(DFHack::Context * tDF,QObject *parent)
-: DF(tDF),QAbstractItemModel(parent)
-{
+: DF(tDF),QAbstractItemModel(parent){
 	rootItem = new dfCopyObj(tDF);
 }
-dfCopyModel::~dfCopyModel()
-{
+dfCopyModel::~dfCopyModel(){
 	delete rootItem;
 }
-QModelIndex dfCopyModel::index(int row, int column,const QModelIndex &parent) const
-{
+QModelIndex dfCopyModel::index(int row, int column,const QModelIndex &parent) const{
 	if (!hasIndex(row, column, parent))
 		return QModelIndex();
 
@@ -48,8 +45,7 @@ QModelIndex dfCopyModel::parent(const QModelIndex &index) const
 
      return createIndex(parentItem->row(), 0, parentItem);
  }
-int dfCopyModel::rowCount(const QModelIndex &parent) const
-{
+int dfCopyModel::rowCount(const QModelIndex &parent) const{
  dfCopyObj *parentItem;
  if (parent.column() > 0)
      return 0;
@@ -61,12 +57,10 @@ int dfCopyModel::rowCount(const QModelIndex &parent) const
 
  return parentItem->childCount();
 }
-int dfCopyModel::columnCount(const QModelIndex &parent) const
-{
+int dfCopyModel::columnCount(const QModelIndex &parent) const{
     return 3;
 }
-QVariant dfCopyModel::data(const QModelIndex &index, int role) const
-{
+QVariant dfCopyModel::data(const QModelIndex &index, int role) const{
     if (!index.isValid())
          return QVariant();
 
@@ -90,8 +84,7 @@ QVariant dfCopyModel::data(const QModelIndex &index, int role) const
             return item->getComment();
     return QVariant();
 }
-QVariant dfCopyModel::headerData(int section, Qt::Orientation orientation,int role) const
-{
+QVariant dfCopyModel::headerData(int section, Qt::Orientation orientation,int role) const{
     if (role != Qt::DisplayRole)
          return QVariant();
 
@@ -248,8 +241,7 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
      }
      return false;
 }
-bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &parent)
-{
+bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &parent){
     dfCopyObj* parent_item;
     if(!parent.isValid()){
         parent_item = rootItem;
@@ -274,8 +266,7 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &
      endInsertRows();
      return true;
  }
- void dfCopyModel::clear()
-{
+ void dfCopyModel::clear(){
     for (int i = 0; i < rootItem->childCount(); ++i) {
         dfCopyObj* item = rootItem->child(i);
         delete item;
@@ -294,8 +285,7 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &
      endInsertRows();
      return true;
  }
-bool dfCopyModel::removeRows ( int row, int count, const QModelIndex & parent ) 
-{
+bool dfCopyModel::removeRows ( int row, int count, const QModelIndex & parent ) {
     dfCopyObj* parent_item;
     if(!parent.isValid()){
         parent_item = rootItem;

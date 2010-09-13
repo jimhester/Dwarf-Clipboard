@@ -5,8 +5,7 @@ class QGraphicsScene;
 #include <QWidget>
 #include "ui_editWidget.h"
 
-class dfCopyPasteEditWidget : public QWidget, private Ui::editWidget
-{
+class dfCopyPasteEditWidget : public QWidget, private Ui::editWidget{
     Q_OBJECT
 private:
 	dfCopyObj * obj;

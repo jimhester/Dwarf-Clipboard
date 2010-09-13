@@ -7,12 +7,11 @@
 #include <QLabel>
 #include "dfCopyObj.h"
 
-class dfCopyModel : public QAbstractItemModel
-{
+class dfCopyModel : public QAbstractItemModel{
      Q_OBJECT
 
 public:
-    dfCopyModel(DFHack::Context * tDF, QObject *parent = 0);
+    dfCopyModel(DFHack::Context * tDF=0, QObject *parent = 0);
 	dfCopyModel::~dfCopyModel();
     void clear();
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -36,6 +35,7 @@ public:
 	QModelIndex index(int row, int column,
 				   const QModelIndex &parent = QModelIndex()) const;
 	QModelIndex parent(const QModelIndex &index) const;
+    void setDF(DFHack::Context * tDF){ DF = tDF; };
 
  private:
 	 dfCopyObj *rootItem;

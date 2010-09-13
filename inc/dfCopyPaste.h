@@ -31,8 +31,7 @@ namespace DFHack{
     class Maps;
 }
 
-class dfCopyPaste : public QMainWindow, private Ui::MainWindow
-{
+class dfCopyPaste : public QMainWindow, private Ui::MainWindow{
     Q_OBJECT
 
 public:
@@ -66,6 +65,7 @@ private slots:
     void save_library(QDir current=QDir("library"), dfCopyObj* parent=0);
     void reload_library();
 	void useOriginal(int state);
+    void heartbeat();
 private:
     void createIconGroupBox();
     void createMessageGroupBox();
@@ -79,10 +79,10 @@ private:
     void load_directory(QString directory=QString("library"),dfCopyObj * parent=0);
     void recalcAllDfCopyObj();
     void recalcDfCopyObj(dfCopyObj* item);
-
+    QString dfCopyPaste::readDFInitFile();
 
     //DF Stuff
-    void connectToDF();
+    bool connectToDF();
 
     QGroupBox *iconGroupBox;
     QLabel *iconLabel;
@@ -128,6 +128,11 @@ private:
     cursorIdx prevCursor;
     cursorIdx c3;
 
+    QTimer *heartbeatTimer;
+    bool connected;
+    QLabel *connectedLabel;
+    QPixmap connectedIcon;
+    QPixmap disconnectedIcon;
 };
 
 #endif

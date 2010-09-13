@@ -1,7 +1,6 @@
 #include "inc\dfLocationIterator.h"
 
-dfLocationIterator::dfLocationIterator(cursorIdx start, cursorIdx end,DFHack::Maps* map)
-{
+dfLocationIterator::dfLocationIterator(cursorIdx start, cursorIdx end,DFHack::Maps* map){
     Maps = map;
     pos[0] = start;
     pos[1] = end;
@@ -12,8 +11,7 @@ dfLocationIterator::dfLocationIterator(cursorIdx start, cursorIdx end,DFHack::Ma
     updateDesignationsBlock = false;
 }
 
-void dfLocationIterator::sort()
-{
+void dfLocationIterator::sort(){
     int32_t temp1;
     if(pos[0].x > pos[1].x){
         temp1 = pos[0].x;
@@ -31,8 +29,7 @@ void dfLocationIterator::sort()
         pos[1].z = temp1;
     }
 }
-void dfLocationIterator::getTiles()
-{
+void dfLocationIterator::getTiles(){
     tile[0] = getTileFromCursor(pos[0]);
     tile[1] = getTileFromCursor(pos[1]);
 }

@@ -31,7 +31,7 @@ distribution.
 
 namespace DFHack
 {
-    class memory_info;
+    class VersionInfo;
     class Process;
     class Window;
     
@@ -160,9 +160,11 @@ namespace DFHack
             virtual void getMemRanges(std::vector<t_memrange> & ranges ) = 0;
 
             /// get the flattened Memory.xml entry of this process
-            virtual memory_info *getDescriptor() = 0;
+            virtual VersionInfo *getDescriptor() = 0;
             /// get the DF Process ID
             virtual int getPID() = 0;
+            /// get the DF Process FilePath
+            virtual std::string getPath() = 0;
             /// get module index by name and version. bool 1 = error
             virtual bool getModuleIndex (const char * name, const uint32_t version, uint32_t & OUTPUT) = 0;
             /// get the SHM start if available
@@ -182,7 +184,7 @@ namespace DFHack
         private:
             Private * const d;
         public:
-            NormalProcess(uint32_t pid, std::vector <memory_info *> & known_versions);
+            NormalProcess(uint32_t pid, std::vector <VersionInfo *> & known_versions);
             ~NormalProcess();
             bool attach();
             bool detach();
@@ -228,8 +230,9 @@ namespace DFHack
             
             bool getThreadIDs(std::vector<uint32_t> & threads );
             void getMemRanges(std::vector<t_memrange> & ranges );
-            memory_info *getDescriptor();
+            VersionInfo *getDescriptor();
             int getPID();
+            std::string getPath();
             // get module index by name and version. bool 1 = error
             bool getModuleIndex (const char * name, const uint32_t version, uint32_t & OUTPUT) { OUTPUT=0; return false;};
             // get the SHM start if available
@@ -246,7 +249,7 @@ namespace DFHack
             Private * const d;
             
         public:
-            SHMProcess(uint32_t PID, std::vector <memory_info *> & known_versions);
+            SHMProcess(uint32_t PID, std::vector <VersionInfo *> & known_versions);
             ~SHMProcess();
             // Set up stuff so we can read memory
             bool attach();
@@ -293,8 +296,9 @@ namespace DFHack
             
             bool getThreadIDs(std::vector<uint32_t> & threads );
             void getMemRanges(std::vector<t_memrange> & ranges );
-            memory_info *getDescriptor();
+            VersionInfo *getDescriptor();
             int getPID();
+            std::string getPath();
             // get module index by name and version. bool 1 = error
             bool getModuleIndex (const char * name, const uint32_t version, uint32_t & OUTPUT);
             // get the SHM start if available
@@ -311,7 +315,7 @@ namespace DFHack
             Private * const d;
             
         public:
-            WineProcess(uint32_t pid, std::vector <memory_info *> & known_versions);
+            WineProcess(uint32_t pid, std::vector <VersionInfo *> & known_versions);
             ~WineProcess();
             bool attach();
             bool detach();
@@ -357,13 +361,14 @@ namespace DFHack
             
             bool getThreadIDs(std::vector<uint32_t> & threads );
             void getMemRanges(std::vector<t_memrange> & ranges );
-            memory_info *getDescriptor();
+            VersionInfo *getDescriptor();
             int getPID();
             // get module index by name and version. bool 1 = error
             bool getModuleIndex (const char * name, const uint32_t version, uint32_t & OUTPUT) {OUTPUT=0; return false;};
             // get the SHM start if available
             char * getSHMStart (void){return 0;};
             bool SetAndWait (uint32_t state){return false;};
+            std::string getPath() {return std::string()}; //FIXME should be pretty trival
     };
 #endif
 }

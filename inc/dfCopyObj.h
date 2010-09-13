@@ -12,8 +12,7 @@
 
 class dfCopyObj;
 
-class dfCopyObj
-{
+class dfCopyObj{
 private:
     int idx;
     DFHack::Context *DF;
