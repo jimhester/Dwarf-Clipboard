@@ -86,14 +86,12 @@ dfCopyPaste::dfCopyPaste()
     disconnectedIcon = generated;
     loadDirectory();
     if(connected){
+        connected = false; //this is ugly, but just ensures everything will be set proprly
         setConnected();
-        connectedLabel->setPixmap(connectedIcon);
-        Ui_MainWindow::statusBar->showMessage("Connected");
     }
     else{
+        connected = true;
         setDisconnected();
-        connectedLabel->setPixmap(disconnectedIcon);
-        Ui_MainWindow::statusBar->showMessage("Disconnected");
     }
     setupViews();   
 }
@@ -175,6 +173,8 @@ void dfCopyPaste::createConnections()
     connect(pushButtonLibraryLoad, SIGNAL(clicked()),this,SLOT(load()));
     connect(pushButtonRecentPasteDesignations, SIGNAL(clicked()),this,SLOT(pasteDesignations()));
     connect(pushButtonLibraryPasteDesignations, SIGNAL(clicked()),this,SLOT(pasteDesignations()));
+    connect(pushButtonRecentPasteBuildings,SIGNAL(clicked()),this,SLOT(pasteBuildings()));
+    connect(pushButtonLibraryPasteBuildings,SIGNAL(clicked()),this,SLOT(pasteBuildings()));
     connect(pushButtonLibraryReload,SIGNAL(clicked()),this,SLOT(reloadLibrary()));
 
 	connect(copyShortcutButton,SIGNAL(clicked()),this,SLOT(getCopyShortcut()));
@@ -634,11 +634,37 @@ void dfCopyPaste::pasteDesignations()
 		{
 			trayIcon->showMessage( tr("df Paste"),tr("Pasting!"));
 			dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
-			item->paste(tempCursor);
+			item->pasteDesignations(tempCursor);
 		}
 	}
 }
-
+void dfCopyPaste::pasteBuildings()
+{
+    if(!connected)
+        return;
+    QModelIndex idx;
+    if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0){
+        return;
+    }
+    if(TabWidget->currentIndex() == 0){
+        idx = tableViewRecent->currentIndex();
+    }
+    if(TabWidget->currentIndex() == 1){
+        idx = treeViewLibrary->currentIndex();
+    }
+	if(idx.isValid()){
+		cursorIdx tempCursor;
+		if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){
+				trayIcon->showMessage(tr("df Paste"),tr("Please place the df cursor"));
+		}
+		else
+		{
+			trayIcon->showMessage( tr("df Paste"),tr("Pasting!"));
+			dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+			item->pasteBuildings(tempCursor);
+		}
+	}
+}
 void dfCopyPaste::messageClicked()
 {
     QMessageBox::information(0, tr("dfCopyPaste"),
@@ -711,6 +737,21 @@ void dfCopyPaste::loadConfig()
     }
 }
 
+void dfCopyPaste::loadBuildCommands()
+{
+    QMap<QString, QString> commands;
+    QFile inFile("buildCommands.ini");
+    if(inFile.exists())
+    {
+        inFile.open(QIODevice::ReadOnly);
+        QTextStream in(&inFile);
+        while(!in.atEnd()){
+            QStringList list = in.readLine().split('=');
+            commands[list.at(0)]=list.at(1);
+        }
+    }
+    dfCopyObj::setBuildCommands(commands);
+}
     
 void dfCopyPaste::saveAndQuit()
 {

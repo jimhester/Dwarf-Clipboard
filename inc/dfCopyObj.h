@@ -36,6 +36,8 @@ private:
     static bool useOriginal;
     static DFHack::Context *DF;
 	QList<QImage> originalImages;
+    static QMap<QString,QString>buildCommands;
+    cursorIdx lastPaste;
 public:
     dfCopyObj(dfCopyObj *parent = 0);
     dfCopyObj(cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
@@ -67,8 +69,11 @@ public:
     void setComment(QString c);
 	void setParent(dfCopyObj *parent){ parentItem = parent; };
     QList<cursorIdx> getRange()const { return pos; };
-    void paste(cursorIdx location);
+    void pasteDesignations(cursorIdx location);
+    void pasteBuildings(cursorIdx location);
     void recalcImages();
     static void setDF(DFHack::Context *tDF);
+    static void setBuildCommands(QMap<QString,QString> commands);
+    cursorIdx getLastPastePoint();
 };
 #endif

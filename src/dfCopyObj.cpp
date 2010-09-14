@@ -4,6 +4,7 @@
 
 bool dfCopyObj::useOriginal = false;
 DFHack::Context* dfCopyObj::DF=0;
+QMap<QString,QString> dfCopyObj::buildCommands= QMap<QString,QString>();
 
 dfCopyObj::dfCopyObj(dfCopyObj *parent)
 {
@@ -13,6 +14,7 @@ dfCopyObj::dfCopyObj(dfCopyObj *parent)
     idx = 0;
     defaultIndex = 0;
 	parentItem = parent;
+    lastPaste.x = lastPaste.y = lastPaste.z = -30000;
 }
 
 dfCopyObj::dfCopyObj(cursorIdx c1, cursorIdx c2, dfCopyObj *parent)
@@ -24,6 +26,7 @@ dfCopyObj::dfCopyObj(cursorIdx c1, cursorIdx c2, dfCopyObj *parent)
     idx = 0;
     defaultIndex = 0;
 	parentItem = parent;
+    lastPaste.x = lastPaste.y = lastPaste.z = -30000;
 }
 dfCopyObj::dfCopyObj(QImage img,dfCopyObj *parent)
 {
@@ -37,6 +40,7 @@ dfCopyObj::dfCopyObj(QImage img,dfCopyObj *parent)
 	parentItem = parent;
 	originalImages = imageListFromTiledImages(img);
     defaultIndex = 0;
+    lastPaste.x = lastPaste.y = lastPaste.z = -30000;
 }
 void dfCopyObj::recalcImages()
 {   
@@ -189,6 +193,22 @@ void dfCopyObj::getDataFromDF()
     while(itr.next()){
         checkDig(itr.getCurrentTileType(),itr.getCurrentPosition(),beginning);
     }
+    DFHack::Buildings * Bld = DF->getBuildings();
+    DFHack::VersionInfo* mem = DF->getMemoryInfo();
+    uint32_t numBuildings;
+    if(Bld->Start(numBuildings)){
+        for(uint32_t i = 0; i < numBuildings; i++){
+            DFHack::t_building temp;
+            Bld->Read(i, temp);
+            if(temp.type != 0xFFFFFFFF){
+                std::string typestr;
+                mem->resolveClassIDToClassname(temp.type, typestr);
+                if(temp.z >= pos[1].z && temp.z <= pos[0].z && temp.x1 >= pos[0].x && temp.x2 <= pos[1].x && temp.y1 >= pos[0].y && temp.y2 <= pos[1].y){
+                    build[pos[0].z - temp.z][temp.y1-pos[0].y][temp.x1-pos[0].x] = buildCommands[QString(typestr.c_str())];
+                }
+            }
+        }
+    }
 }
 void dfCopyObj::checkDig(int32_t tileType, cursorIdx current, cursorIdx begin)
 {
@@ -201,7 +221,7 @@ void dfCopyObj::checkDig(int32_t tileType, cursorIdx current, cursorIdx begin)
    // else if(DFHack::isWallTerrain(tileType)){build [begin.z - current.z][current.y - begin.y][current.x - begin.x] = "u" ;}
     //build [currentPos.z - pos[0].z][currentPos.y - pos[0].y][currentPos.x - pos[0].x] = "w";}
 }
-void dfCopyObj::paste(cursorIdx location)
+void dfCopyObj::pasteDesignations(cursorIdx location)
 {
     Maps = DF->getMaps();
     Maps->Start();
@@ -223,7 +243,29 @@ void dfCopyObj::paste(cursorIdx location)
         digValue = dig[beginning.z - cur.z][cur.y-beginning.y][cur.x-beginning.x].at(0);
         changeDesignation(designationPtr,digValue,blockPos);
     }
+    lastPaste = location;
 }
+void dfCopyObj::pasteBuildings(cursorIdx location)
+{
+    DFHack::WindowIO* IO = DF->getWindowIO();
+    DFHack::Position* Pos = DF->getPosition();
+    IO->TypeSpecial(DFHack::ESCAPE);
+    IO->TypeStr("b"); // enter build menu
+
+    for(int z = 0;z < build.size();z++){
+        for(int y = 0;y < build[z].size();y++){
+            for(int x = 0;x < build[z][y].size();x++){
+                if(build[z][y][x] != ""){
+                    IO->TypeStr(build[z][y][x].toLatin1());
+                    Pos->setCursorCoords(location.x+x,location.y+y,location.z-z);
+                    IO->TypeSpecial(DFHack::ENTER,2);
+                }
+            }
+        }
+    }
+    lastPaste = location;
+}
+                    
 void dfCopyObj::changeDesignation(DFHack::designations40d *ptr, QChar desig, cursorIdx blockIdx)
 {
     switch(desig.toAscii())
@@ -290,10 +332,7 @@ void dfCopyObj::setupVectors()
 }*/
 void dfCopyObj::setDF(DFHack::Context *tDF)
 {
-    if(tDF)
-    {
-        DF = tDF;
-    }
+    DF = tDF;
 }
 
 void dfCopyObj::addPos(cursorIdx newPos)
@@ -322,4 +361,8 @@ int dfCopyObj::getValid() const
         retVal++;
     }
     return(retVal);
+}
+void dfCopyObj::setBuildCommands(QMap<QString,QString> commands)
+{
+    buildCommands = commands;
 }

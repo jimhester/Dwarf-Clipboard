@@ -116,6 +116,14 @@ Designations</string>
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonRecentPasteBuildings">
+         <property name="text">
+          <string>Paste
+Buildings</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>
@@ -210,6 +218,14 @@ Designations</string>
          <property name="text">
           <string>Paste
 Designations</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonLibraryPasteBuildings">
+         <property name="text">
+          <string>Paste
+Buildings</string>
          </property>
         </widget>
        </item>

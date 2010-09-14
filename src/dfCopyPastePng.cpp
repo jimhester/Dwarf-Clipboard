@@ -315,19 +315,21 @@ QImage dfCopyPastePng::getTileFromScreen(DFHack::t_screen screen)
     QColor foregroundColor = getForegroundColorFromScreen(screen);
     QColor backgroundColor = getBackgroundColorFromScreen(screen);
     QImage tile = tileSet->copy((screen.symbol % 16)*tileWidth,int(screen.symbol/16)*tileHeight,tileWidth,tileHeight);
-    QImage resultImage(tileWidth,tileHeight,QImage::Format_ARGB32);
+    QImage resultImage(tileWidth,tileHeight,QImage::Format_ARGB32_Premultiplied);
     for(int x = 0;x< tile.width();x++){
         for(int y =0;y<tile.height();y++){
-            QColor color = tile.pixel(x,y);
-            if(color.alpha() == 0 || color == QColor("#FF00FF")){ // FF00FF is magenta
+            QColor color;
+            color.setRgba(tile.pixel(x,y));
+            if(color == QColor("#FF00FF")){ // FF00FF is magenta
                 resultImage.setPixel(x,y,backgroundColor.rgb());
             }
             else{
                 QColor newColor;
-                newColor.setAlpha(255);
-                newColor.setRed(foregroundColor.red() * color.red() / 256);
-                newColor.setGreen(foregroundColor.green() * color.green() / 256);
-                newColor.setBlue(foregroundColor.blue() * color.blue() / 256);
+                qreal alpha = color.alphaF();
+                qreal alpha_diff = 1-alpha;
+                newColor.setRedF((alpha * (color.redF() * foregroundColor.redF() )) + (alpha_diff * backgroundColor.redF()));
+                newColor.setGreenF((alpha * (color.greenF() * foregroundColor.greenF() )) + (alpha_diff * backgroundColor.greenF()));
+                newColor.setBlueF((alpha * (color.blueF() * foregroundColor.blueF() )) + (alpha_diff * backgroundColor.blueF()));
                 resultImage.setPixel(x,y,newColor.rgb());
             }
         }

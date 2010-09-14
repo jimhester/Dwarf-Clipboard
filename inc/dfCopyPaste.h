@@ -50,6 +50,7 @@ private slots:
     void messageClicked();
     void copy();
     void pasteDesignations();
+    void pasteBuildings();
     void save();
     void load();
     void deleteSelected();
@@ -83,6 +84,7 @@ private:
     QString dfCopyPaste::readDFInitFile();
     void setConnected();
     void setDisconnected();
+    void loadBuildCommands();
 
     //DF Stuff
     bool connectToDF();
