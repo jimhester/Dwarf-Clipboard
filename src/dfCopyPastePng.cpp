@@ -15,13 +15,18 @@ int dfCopyPastePng::tileWidth = 16;
 int dfCopyPastePng::tileHeight = 16;
 QImage* dfCopyPastePng::tileSet = NULL;
 QMap<QString,QColor> dfCopyPastePng::colorMap;
-QString dfCopyPastePng::tileSetPath = "C:/DF/versions/windows/df_31_12_win/data/art/curses_square_16x16.png";
-QString dfCopyPastePng::colorPath = "C:/DF/versions/windows/df_31_12_win/data/init/colors.txt";
+QString dfCopyPastePng::tileSetPath = "";
+QString dfCopyPastePng::colorPath = "";
+DFHack::Context* dfCopyPastePng::DF =0;
 
-dfCopyPastePng::dfCopyPastePng(DFHack::Context * DFPtr){
-    DF = DFPtr;
+dfCopyPastePng::dfCopyPastePng()
+{
 	setTileSetPath(tileSetPath);
 	setColorPath(colorPath);
+}
+void dfCopyPastePng::setDF(DFHack::Context *DFPtr)
+{
+    DF = DFPtr;
 }
 void dfCopyPastePng::setDelay(int newDelay)
 { 
@@ -44,13 +49,16 @@ void dfCopyPastePng::setColorPath(QString newPath)
 	colorMap.clear();
 	readConfig(colorPath);
 }
-QString dfCopyPastePng::getColorPath(){
+QString dfCopyPastePng::getColorPath()
+{
 	return colorPath;
 }
-QString dfCopyPastePng::getTileSetPath(){
+QString dfCopyPastePng::getTileSetPath()
+{
 	return tileSetPath;
 }
-QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range){
+QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range)
+{
     QList<QImage> retImages;
     DFHack::Position * Pos = DF->getPosition();
     DFHack::WindowIO * Win = DF->getWindowIO();
@@ -113,10 +121,12 @@ QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range){
     delete screen;
     return(retImages);
 }
-QString dfCopyPastePng::stringFromScreen(DFHack::t_screen tile){
+QString dfCopyPastePng::stringFromScreen(DFHack::t_screen tile)
+{
     return (QString("%1,%2,%3,%4;").arg(tile.symbol).arg(tile.foreground).arg(tile.background).arg(tile.bright));
 }
-QList<QImage> dfCopyPastePng::ImagesFromString(QString str){
+QList<QImage> dfCopyPastePng::ImagesFromString(QString str)
+{
     if(str.isEmpty()){
         return QList<QImage>();
     }
@@ -151,7 +161,8 @@ QList<QImage> dfCopyPastePng::ImagesFromString(QString str){
     }
     return Images;
 }
-QString dfCopyPastePng::stringFrom3dVector(const QVector<QVector<QVector<QString> > > &vec){
+QString dfCopyPastePng::stringFrom3dVector(const QVector<QVector<QVector<QString> > > &vec)
+{
     QString ret;
     ret = QString("%1,%2,%3|").arg(vec.size()).arg(vec[0].size()).arg(vec[0][0].size());
     for(int z = 0; z < vec.size();z++){
@@ -165,7 +176,8 @@ QString dfCopyPastePng::stringFrom3dVector(const QVector<QVector<QVector<QString
     }
     return(ret);
 }
-QVector<QVector<QVector<QString> > > dfCopyPastePng::ThreeDVectorFromString(QString str){
+QVector<QVector<QVector<QString> > > dfCopyPastePng::ThreeDVectorFromString(QString str)
+{
     if(str.isEmpty()){
         return QVector<QVector<QVector<QString> > >();
     }
@@ -188,7 +200,8 @@ QVector<QVector<QVector<QString> > > dfCopyPastePng::ThreeDVectorFromString(QStr
     }
     return vec;
 }
-QList< QImage> dfCopyPastePng::regenerateImages(dfCopyObj & obj){
+QList< QImage> dfCopyPastePng::regenerateImages(dfCopyObj & obj)
+{
     QList<QImage> retImages;
     QVector<QVector<QVector<QString > > > dig = obj.getDig();
     QVector<QVector<QVector<QString > > > build = obj.getBuild();
@@ -231,7 +244,8 @@ QList< QImage> dfCopyPastePng::regenerateImages(dfCopyObj & obj){
     }
     return(retImages);
 }
-QList< int > dfCopyPastePng::getBorders(const QVector<QVector<QVector<QString > > > &dig,cursorIdx cur){
+QList< int > dfCopyPastePng::getBorders(const QVector<QVector<QVector<QString > > > &dig,cursorIdx cur)
+{
     int pos = 9;
     QList<int> ret;
     for(int y = cur.y -1;y<=cur.y+1;y++){
@@ -250,7 +264,8 @@ QList< int > dfCopyPastePng::getBorders(const QVector<QVector<QVector<QString > 
 }
 
 
-void dfCopyPastePng::waitTillDigMenuClear(){
+void dfCopyPastePng::waitTillDigMenuClear()
+{
     DFHack::Position * Pos = DF->getPosition();
     DFHack::WindowIO * Win = DF->getWindowIO();
 
@@ -267,7 +282,8 @@ void dfCopyPastePng::waitTillDigMenuClear(){
     }
 }
 
-void dfCopyPastePng::waitTillScreenPosition(cursorIdx check){
+void dfCopyPastePng::waitTillScreenPosition(cursorIdx check)
+{
     DFHack::Position * p = DF->getPosition();
     DFHack::WindowIO * w = DF->getWindowIO();
     cursorIdx state;
@@ -279,10 +295,12 @@ void dfCopyPastePng::waitTillScreenPosition(cursorIdx check){
     }
     w->TypeSpecial(DFHack::WAIT,1,delay);
 }
-void dfCopyPastePng::setTransparency(QImage* toSet){
+void dfCopyPastePng::setTransparency(QImage* toSet)
+{
     toSet->setAlphaChannel(toSet->createMaskFromColor(QColor(255,0,255).rgba(),Qt::MaskOutColor));
 }
-void dfCopyPastePng::readConfig(QString FileName){
+void dfCopyPastePng::readConfig(QString FileName)
+{
     QFile file(FileName);
     file.open(QFile::ReadOnly);
     QTextStream t(&file);
@@ -292,28 +310,32 @@ void dfCopyPastePng::readConfig(QString FileName){
     }
     file.close();
 }
-QImage dfCopyPastePng::getTileFromScreen(DFHack::t_screen screen){
-    QImage foreground(tileWidth,tileHeight,QImage::Format_ARGB32);
-    QImage background(tileWidth,tileHeight,QImage::Format_ARGB32);
-    foreground.fill(getForegroundColorFromScreen(screen).rgb());
-    background.fill(getBackgroundColorFromScreen(screen).rgb());
+QImage dfCopyPastePng::getTileFromScreen(DFHack::t_screen screen)
+{
+    QColor foregroundColor = getForegroundColorFromScreen(screen);
+    QColor backgroundColor = getBackgroundColorFromScreen(screen);
     QImage tile = tileSet->copy((screen.symbol % 16)*tileWidth,int(screen.symbol/16)*tileHeight,tileWidth,tileHeight);
-    QImage out = tile.createMaskFromColor(QColor(255,0,255).rgba(),Qt::MaskOutColor);
-    QImage in = tile.createMaskFromColor(QColor(255,0,255).rgba(),Qt::MaskInColor);
-    foreground.setAlphaChannel(out);
-    background.setAlphaChannel(in);
     QImage resultImage(tileWidth,tileHeight,QImage::Format_ARGB32);
-    QPainter painter(&resultImage);
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(resultImage.rect(), Qt::transparent);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    painter.drawImage(0, 0, background);
-    painter.setCompositionMode(QPainter::CompositionMode_Plus); 
-    painter.drawImage(0,0,foreground);
-    painter.end();
+    for(int x = 0;x< tile.width();x++){
+        for(int y =0;y<tile.height();y++){
+            QColor color = tile.pixel(x,y);
+            if(color.alpha() == 0 || color == QColor("#FF00FF")){ // FF00FF is magenta
+                resultImage.setPixel(x,y,backgroundColor.rgb());
+            }
+            else{
+                QColor newColor;
+                newColor.setAlpha(255);
+                newColor.setRed(foregroundColor.red() * color.red() / 256);
+                newColor.setGreen(foregroundColor.green() * color.green() / 256);
+                newColor.setBlue(foregroundColor.blue() * color.blue() / 256);
+                resultImage.setPixel(x,y,newColor.rgb());
+            }
+        }
+    }
     return(resultImage);
 }
-void dfCopyPastePng::processLine(QString line){
+void dfCopyPastePng::processLine(QString line)
+{
     if(line.startsWith("[")){
         QString Color, Channel,Value;
         QStringList list;
@@ -332,7 +354,8 @@ void dfCopyPastePng::processLine(QString line){
         }
     }
 }
-QColor dfCopyPastePng::getForegroundColorFromScreen(DFHack::t_screen tile){
+QColor dfCopyPastePng::getForegroundColorFromScreen(DFHack::t_screen tile)
+{
     if(tile.bright == 0){
         switch (tile.foreground){
             case 0:
@@ -375,7 +398,8 @@ QColor dfCopyPastePng::getForegroundColorFromScreen(DFHack::t_screen tile){
     }
     return QColor();
 }
-QColor dfCopyPastePng::getBackgroundColorFromScreen(DFHack::t_screen tile){
+QColor dfCopyPastePng::getBackgroundColorFromScreen(DFHack::t_screen tile)
+{
         switch (tile.background){
             case 0:
                 return colorMap["BLACK"];

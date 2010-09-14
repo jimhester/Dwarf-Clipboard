@@ -24,7 +24,7 @@
    <property name="currentIndex">
     <number>0</number>
    </property>
-   <widget class="QWidget" name="tab_recent">
+   <widget class="QWidget" name="tabRecent">
     <property name="acceptDrops">
      <bool>true</bool>
     </property>
@@ -33,7 +33,7 @@
     </attribute>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="dfCopyPasteTableView" name="tableView_recent">
+      <widget class="dfCopyPasteTableView" name="tableViewRecent">
        <property name="acceptDrops">
         <bool>true</bool>
        </property>
@@ -60,7 +60,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QPushButton" name="pushButton_recent_load">
+        <widget class="QPushButton" name="pushButtonRecentLoad">
          <property name="toolTip">
           <string>Load Selected Layout To File</string>
          </property>
@@ -70,7 +70,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_recent_save">
+        <widget class="QPushButton" name="pushButtonRecentSave">
          <property name="toolTip">
           <string>Save Selected Layout to File</string>
          </property>
@@ -80,7 +80,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_to_library">
+        <widget class="QPushButton" name="pushButtonToLibrary">
          <property name="toolTip">
           <string>Add Selected Layout to File</string>
          </property>
@@ -103,7 +103,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_recent_paste_designations">
+        <widget class="QPushButton" name="pushButtonRecentPasteDesignations">
          <property name="toolTip">
           <string>Paste Selected Layout Designations in DF</string>
          </property>
@@ -120,13 +120,13 @@ Designations</string>
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="tab_library">
+   <widget class="QWidget" name="tabLibrary">
     <attribute name="title">
      <string>Library</string>
     </attribute>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="dfCopyPasteTreeView" name="treeView_library">
+      <widget class="dfCopyPasteTreeView" name="treeViewLibrary">
        <property name="editTriggers">
         <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
        </property>
@@ -150,7 +150,7 @@ Designations</string>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QPushButton" name="pushButton_library_load">
+        <widget class="QPushButton" name="pushButtonLibraryLoad">
          <property name="toolTip">
           <string>Load Layout From File</string>
          </property>
@@ -160,7 +160,7 @@ Designations</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_library_save_selected">
+        <widget class="QPushButton" name="pushButtonLibrarySaveSelected">
          <property name="toolTip">
           <string>Save Selected Layout To File</string>
          </property>
@@ -170,7 +170,7 @@ Designations</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_library_reload">
+        <widget class="QPushButton" name="pushButtonLibraryReload">
          <property name="toolTip">
           <string>Reload Library From Disk</string>
          </property>
@@ -180,7 +180,7 @@ Designations</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_library_save">
+        <widget class="QPushButton" name="pushButtonLibrarySave">
          <property name="toolTip">
           <string>Save Library To Disk</string>
          </property>
@@ -203,7 +203,7 @@ Designations</string>
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_library_paste_designations">
+        <widget class="QPushButton" name="pushButtonLibraryPasteDesignations">
          <property name="toolTip">
           <string>Paste Selected Layout Designations to DF</string>
          </property>
@@ -217,7 +217,7 @@ Designations</string>
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="tab_options">
+   <widget class="QWidget" name="tabOptions">
     <attribute name="title">
      <string>Options</string>
     </attribute>

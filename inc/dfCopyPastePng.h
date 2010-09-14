@@ -8,9 +8,10 @@
 
 class dfCopyObj;
 
-class dfCopyPastePng{
+class dfCopyPastePng
+{
 public:
-    dfCopyPastePng(DFHack::Context * DFPtr);
+    dfCopyPastePng();
     QImage getTileSet(){ return *tileSet; };
     QList<QImage> getImagesForRange(QList<cursorIdx> range);
     QList<QImage> regenerateImages(dfCopyObj& obj);
@@ -24,8 +25,9 @@ public:
 	static int getDelay();
 	static QString getTileSetPath();
 	static QString getColorPath();
+    static void setDF(DFHack::Context* DFPtr);
 private:
-    DFHack::Context *DF;
+    static DFHack::Context *DF;
     void setTransparency(QImage* toSet);
     QColor getForegroundColorFromScreen(DFHack::t_screen tile);
     QColor getBackgroundColorFromScreen(DFHack::t_screen tile);

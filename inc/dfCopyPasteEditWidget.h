@@ -5,14 +5,15 @@ class QGraphicsScene;
 #include <QWidget>
 #include "ui_editWidget.h"
 
-class dfCopyPasteEditWidget : public QWidget, private Ui::editWidget{
+class dfCopyPasteEditWidget : public QWidget, private Ui::editWidget
+{
     Q_OBJECT
 private:
 	dfCopyObj * obj;
     QGraphicsScene * scene;
 
 private slots:
-	void update_image(int position);
+	void updateImage(int position);
 
 public:
 	dfCopyPasteEditWidget(QWidget *parent = 0);

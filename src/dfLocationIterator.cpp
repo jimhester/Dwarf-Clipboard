@@ -1,6 +1,7 @@
 #include "inc\dfLocationIterator.h"
 
-dfLocationIterator::dfLocationIterator(cursorIdx start, cursorIdx end,DFHack::Maps* map){
+dfLocationIterator::dfLocationIterator(cursorIdx start, cursorIdx end,DFHack::Maps* map)
+{
     Maps = map;
     pos[0] = start;
     pos[1] = end;
@@ -11,7 +12,8 @@ dfLocationIterator::dfLocationIterator(cursorIdx start, cursorIdx end,DFHack::Ma
     updateDesignationsBlock = false;
 }
 
-void dfLocationIterator::sort(){
+void dfLocationIterator::sort()
+{
     int32_t temp1;
     if(pos[0].x > pos[1].x){
         temp1 = pos[0].x;
@@ -29,18 +31,21 @@ void dfLocationIterator::sort(){
         pos[1].z = temp1;
     }
 }
-void dfLocationIterator::getTiles(){
+void dfLocationIterator::getTiles()
+{
     tile[0] = getTileFromCursor(pos[0]);
     tile[1] = getTileFromCursor(pos[1]);
 }
-tileIdx dfLocationIterator::getTileFromCursor(cursorIdx in){
+tileIdx dfLocationIterator::getTileFromCursor(cursorIdx in)
+{
     tileIdx ret;
     ret.x = in.x/16;
     ret.y = in.y/16;
     ret.z = in.z;
     return(ret);
 }
-cursorIdx dfLocationIterator::begin(){
+cursorIdx dfLocationIterator::begin()
+{
     currentPos = pos[0];
     currentPos.z = pos[1].z;
     currentTile = tile[0];
@@ -50,7 +55,8 @@ cursorIdx dfLocationIterator::begin(){
     currentBlockPos.z = pos[1].z;
     return currentPos;
 }
-cursorIdx dfLocationIterator::end(){
+cursorIdx dfLocationIterator::end()
+{
     currentPos = pos[1];
     currentPos.z = pos[0].z;
     currentTile = tile[1];
@@ -59,20 +65,23 @@ cursorIdx dfLocationIterator::end(){
     currentBlockPos.z = pos[0].z;
     return currentPos;
 }
-void dfLocationIterator::updateBlock(){
+void dfLocationIterator::updateBlock()
+{
     if(!Maps || !Maps->isValidBlock(currentTile.x,currentTile.y,currentTile.z)) return;
     Maps->Start();
     Maps->ReadBlock40d(currentTile.x,currentTile.y,currentTile.z,&currentBlock);
     Maps->ReadDesignations(currentTile.x,currentTile.y,currentTile.z,&currentDesignation);
 }
-void dfLocationIterator::writeDesigations(){
+void dfLocationIterator::writeDesigations()
+{
     if(!Maps || !Maps->isValidBlock(currentTile.x,currentTile.y,currentTile.z)) return;
     if(updateDesignationsBlock){
         Maps->Start();
         Maps->WriteDesignations(currentTile.x,currentTile.y,currentTile.z, &currentDesignation);
     }
 }
-bool dfLocationIterator::next(){
+bool dfLocationIterator::next()
+{
     currentBlockPos.x++;
     if(currentPos.x == pos[1].x && currentPos.y == pos[1].y && currentPos.z == pos[0].z){
         writeDesigations();

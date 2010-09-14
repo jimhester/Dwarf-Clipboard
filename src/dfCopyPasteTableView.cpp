@@ -1,7 +1,8 @@
 #include "inc\dfCopyPasteTableView.h"
 #include "inc\dfCopyObj.h"
 
-bool dfCopyPasteTableView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event ){
+bool dfCopyPasteTableView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
+{
     if(!index.isValid()){
         return QAbstractItemView::edit(index,trigger,event);
     }

@@ -31,7 +31,8 @@ namespace DFHack{
     class Maps;
 }
 
-class dfCopyPaste : public QMainWindow, private Ui::MainWindow{
+class dfCopyPaste : public QMainWindow, private Ui::MainWindow
+{
     Q_OBJECT
 
 public:
@@ -48,22 +49,22 @@ private slots:
     void showMessage();
     void messageClicked();
     void copy();
-    void paste_designations();
+    void pasteDesignations();
     void save();
     void load();
-    void delete_selected();
-    void get_copy_shortcut();
-    void get_paste_designation_shortcut();
-	void get_tileset_path_user();
-	void get_color_path_user();
-	void get_tileset_path_df();
-	void get_color_path_df();
-    void save_and_quit();
-    void input_delay_changed();
-    void thumbnail_size_changed();
-    void copy_to_library();
-    void save_library(QDir current=QDir("library"), dfCopyObj* parent=0);
-    void reload_library();
+    void deleteSelected();
+    void getCopyShortcut();
+    void getPasteDesignationShortcut();
+	void getTilesetPathUser();
+	void getColorPathUser();
+	void getTilesetPathDf();
+	void getColorPathDf();
+    void saveAndQuit();
+    void inputDelayChanged();
+    void thumbnailSizeChanged();
+    void copyToLibrary();
+    void saveLibrary(QDir current=QDir("library"), dfCopyObj* parent=0);
+    void reloadLibrary();
 	void useOriginal(int state);
     void heartbeat();
 private:
@@ -73,13 +74,15 @@ private:
     void createTrayIcon();
 	void createConnections();
 	void createShortcuts();
-    void load_config();
-    void setup_views();
-    void remove_directory(QDir current);
-    void load_directory(QString directory=QString("library"),dfCopyObj * parent=0);
+    void loadConfig();
+    void setupViews();
+    void removeDirectory(QDir current);
+    void loadDirectory(QString directory=QString("library"),dfCopyObj * parent=0);
     void recalcAllDfCopyObj();
     void recalcDfCopyObj(dfCopyObj* item);
     QString dfCopyPaste::readDFInitFile();
+    void setConnected();
+    void setDisconnected();
 
     //DF Stuff
     bool connectToDF();
@@ -109,10 +112,10 @@ private:
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
 
-    QxtGlobalShortcut * copy_shortcut;
-    QxtGlobalShortcut * paste_designation_shortcut;
-    int input_delay;
-    int thumbnail_size;
+    QxtGlobalShortcut * copyShortcut;
+    QxtGlobalShortcut * pasteDesignationShortcut;
+    int inputDelay;
+    int thumbnailSize;
 
     dfCopyModel * recentModel;
     dfCopyModel * libraryModel;

@@ -4,7 +4,8 @@
 #include <QLabel>
 #include "inc/dfCopyPasteEditWidget.h"
 
-class dfCopyPasteTableView : public QTableView{
+class dfCopyPasteTableView : public QTableView
+{
     Q_OBJECT
 
 public:

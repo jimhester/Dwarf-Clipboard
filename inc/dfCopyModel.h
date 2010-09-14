@@ -7,7 +7,8 @@
 #include <QLabel>
 #include "dfCopyObj.h"
 
-class dfCopyModel : public QAbstractItemModel{
+class dfCopyModel : public QAbstractItemModel
+{
      Q_OBJECT
 
 public:

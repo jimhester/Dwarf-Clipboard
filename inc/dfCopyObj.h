@@ -12,10 +12,10 @@
 
 class dfCopyObj;
 
-class dfCopyObj{
+class dfCopyObj
+{
 private:
     int idx;
-    DFHack::Context *DF;
     DFHack::Maps *Maps;
     QList <cursorIdx> pos;
     void setupVectors();
@@ -34,8 +34,12 @@ private:
     QList<QImage> imageListFromTiledImages(const QImage &image);
     int defaultIndex;
     static bool useOriginal;
+    static DFHack::Context *DF;
 	QList<QImage> originalImages;
 public:
+    dfCopyObj(dfCopyObj *parent = 0);
+    dfCopyObj(cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
+    dfCopyObj(QImage img,dfCopyObj *parent = 0);
 	dfCopyObj::~dfCopyObj();
 	void appendChild(dfCopyObj *child);
 	void prependChild(dfCopyObj *child);
@@ -45,11 +49,7 @@ public:
 	int childCount() const;
 	int row() const;
 	dfCopyObj *parent();
-    dfCopyObj(DFHack::Context *tDF, dfCopyObj *parent = 0);
-    dfCopyObj(DFHack::Context *tDF, cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
-    dfCopyObj(DFHack::Context *tDF, QImage img,dfCopyObj *parent = 0);
 	static void setOriginalState(int state);
-    void setDF(DFHack::Context *tDF);
     QVector<QVector<QVector<QString > > > getDig() const { return dig; };
     QVector<QVector<QVector<QString > > > getBuild() const { return build; } ;
     void addPos(cursorIdx pos);
@@ -69,5 +69,6 @@ public:
     QList<cursorIdx> getRange()const { return pos; };
     void paste(cursorIdx location);
     void recalcImages();
+    static void setDF(DFHack::Context *tDF);
 };
 #endif

@@ -2,7 +2,8 @@
 
 #include "common.h"
 
-class dfLocationIterator{
+class dfLocationIterator
+{
     private: 
         DFHack::Maps *Maps;
         cursorIdx pos[2];
