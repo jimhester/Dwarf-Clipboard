@@ -2,7 +2,7 @@
   <qresource prefix="icons">
     <file>images/cog.png</file>
     <file>images/connect.png</file>
-    <file>images/dfCopyPaste.png</file>
+    <file>images/DwarfClipboard.png</file>
     <file>images/disconnect.png</file>
   </qresource>
 </RCC>

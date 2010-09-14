@@ -1,13 +1,13 @@
-#ifndef dfCopyPaste_H
-#define dfCopyPaste_H
+#ifndef DwarfClipboard_H
+#define DwarfClipboard_H
 
 #include <QSystemTrayIcon>
 #include <QMainWindow>
 #include <QDir>
 #include "common.h"
-#include "dfCopyObj.h"
-#include "dfCopyModel.h"
-#include "ui_dfCopyPaste.h"
+#include "DwarfClipboardCopyObj.h"
+#include "DwarfClipboardModel.h"
+#include "ui_DwarfClipboard.h"
 
 class QListView;
 class QTableView;
@@ -31,12 +31,12 @@ namespace DFHack{
     class Maps;
 }
 
-class dfCopyPaste : public QMainWindow, private Ui::MainWindow
+class DwarfClipboard : public QMainWindow, private Ui::MainWindow
 {
     Q_OBJECT
 
 public:
-    dfCopyPaste();
+    DwarfClipboard();
 
     void setVisible(bool visible);
 
@@ -56,6 +56,8 @@ private slots:
     void deleteSelected();
     void getCopyShortcut();
     void getPasteDesignationShortcut();
+    void getPasteBuildingShortcut();
+    void getSetCursorToPreviousPasteShortcut();
 	void getTilesetPathUser();
 	void getColorPathUser();
 	void getTilesetPathDf();
@@ -64,10 +66,11 @@ private slots:
     void inputDelayChanged();
     void thumbnailSizeChanged();
     void copyToLibrary();
-    void saveLibrary(QDir current=QDir("library"), dfCopyObj* parent=0);
+    void saveLibrary(QDir current=QDir("library"), DwarfClipboardCopyObj* parent=0);
     void reloadLibrary();
 	void useOriginal(int state);
     void heartbeat();
+    void setPreviousPos();
 private:
     void createIconGroupBox();
     void createMessageGroupBox();
@@ -78,10 +81,10 @@ private:
     void loadConfig();
     void setupViews();
     void removeDirectory(QDir current);
-    void loadDirectory(QString directory=QString("library"),dfCopyObj * parent=0);
-    void recalcAllDfCopyObj();
-    void recalcDfCopyObj(dfCopyObj* item);
-    QString dfCopyPaste::readDFInitFile();
+    void loadDirectory(QString directory=QString("library"),DwarfClipboardCopyObj * parent=0);
+    void recalcAllDwarfClipboardCopyObj();
+    void recalcDwarfClipboardCopyObj(DwarfClipboardCopyObj* item);
+    QString DwarfClipboard::readDFInitFile();
     void setConnected();
     void setDisconnected();
     void loadBuildCommands();
@@ -116,11 +119,13 @@ private:
 
     QxtGlobalShortcut * copyShortcut;
     QxtGlobalShortcut * pasteDesignationShortcut;
+    QxtGlobalShortcut * pasteBuildingShortcut;
+    QxtGlobalShortcut * setCursorToPreviousPasteShortcut;
     int inputDelay;
     int thumbnailSize;
 
-    dfCopyModel * recentModel;
-    dfCopyModel * libraryModel;
+    DwarfClipboardModel * recentModel;
+    DwarfClipboardModel * libraryModel;
 
     //DF things
     DFHack::ContextManager *DFMgr;

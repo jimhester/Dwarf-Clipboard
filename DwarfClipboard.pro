@@ -2,9 +2,9 @@ SOURCES += src/*.cpp
 
 HEADERS += inc/*.h
 
-RESOURCES += dfCopyPaste.qrc
+RESOURCES += DwarfClipboard.qrc
 
-FORMS += dfCopyPaste.ui editWidget.ui
+FORMS += DwarfClipboard.ui editWidget.ui
 
 CONFIG += qt
 CONFIG  += qxt

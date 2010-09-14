@@ -1,6 +1,6 @@
-#include "inc\dfCopyPastePng.h"
+#include "inc\DwarfClipboardPng.h"
 
-#include "inc\dfCopyObj.h"
+#include "inc\DwarfClipboardCopyObj.h"
 #include "inc\dfLocationIterator.h"
 
 #include <QImage>
@@ -10,29 +10,29 @@
 #include <QMap>
 #include <QDebug>
 
-int dfCopyPastePng::delay = 100;
-int dfCopyPastePng::tileWidth = 16;
-int dfCopyPastePng::tileHeight = 16;
-QImage* dfCopyPastePng::tileSet = NULL;
-QMap<QString,QColor> dfCopyPastePng::colorMap;
-QString dfCopyPastePng::tileSetPath = "";
-QString dfCopyPastePng::colorPath = "";
-DFHack::Context* dfCopyPastePng::DF =0;
+int DwarfClipboardPng::delay = 100;
+int DwarfClipboardPng::tileWidth = 16;
+int DwarfClipboardPng::tileHeight = 16;
+QImage* DwarfClipboardPng::tileSet = NULL;
+QMap<QString,QColor> DwarfClipboardPng::colorMap;
+QString DwarfClipboardPng::tileSetPath = "";
+QString DwarfClipboardPng::colorPath = "";
+DFHack::Context* DwarfClipboardPng::DF =0;
 
-dfCopyPastePng::dfCopyPastePng()
+DwarfClipboardPng::DwarfClipboardPng()
 {
 	setTileSetPath(tileSetPath);
 	setColorPath(colorPath);
 }
-void dfCopyPastePng::setDF(DFHack::Context *DFPtr)
+void DwarfClipboardPng::setDF(DFHack::Context *DFPtr)
 {
     DF = DFPtr;
 }
-void dfCopyPastePng::setDelay(int newDelay)
+void DwarfClipboardPng::setDelay(int newDelay)
 { 
 	delay = newDelay;
 }
-void dfCopyPastePng::setTileSetPath(QString newPath)
+void DwarfClipboardPng::setTileSetPath(QString newPath)
 { 
 	if(tileSet)
 	{
@@ -43,21 +43,21 @@ void dfCopyPastePng::setTileSetPath(QString newPath)
     tileWidth = tileSet->width()/16;
     tileHeight = tileSet->height()/16;
 }
-void dfCopyPastePng::setColorPath(QString newPath)
+void DwarfClipboardPng::setColorPath(QString newPath)
 { 
 	colorPath = newPath;
 	colorMap.clear();
 	readConfig(colorPath);
 }
-QString dfCopyPastePng::getColorPath()
+QString DwarfClipboardPng::getColorPath()
 {
 	return colorPath;
 }
-QString dfCopyPastePng::getTileSetPath()
+QString DwarfClipboardPng::getTileSetPath()
 {
 	return tileSetPath;
 }
-QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range)
+QList<QImage> DwarfClipboardPng::getImagesForRange(QList<cursorIdx> range)
 {
     QList<QImage> retImages;
     DFHack::Position * Pos = DF->getPosition();
@@ -121,11 +121,11 @@ QList<QImage> dfCopyPastePng::getImagesForRange(QList<cursorIdx> range)
     delete screen;
     return(retImages);
 }
-QString dfCopyPastePng::stringFromScreen(DFHack::t_screen tile)
+QString DwarfClipboardPng::stringFromScreen(DFHack::t_screen tile)
 {
     return (QString("%1,%2,%3,%4;").arg(tile.symbol).arg(tile.foreground).arg(tile.background).arg(tile.bright));
 }
-QList<QImage> dfCopyPastePng::ImagesFromString(QString str)
+QList<QImage> DwarfClipboardPng::ImagesFromString(QString str)
 {
     if(str.isEmpty()){
         return QList<QImage>();
@@ -161,7 +161,7 @@ QList<QImage> dfCopyPastePng::ImagesFromString(QString str)
     }
     return Images;
 }
-QString dfCopyPastePng::stringFrom3dVector(const QVector<QVector<QVector<QString> > > &vec)
+QString DwarfClipboardPng::stringFrom3dVector(const QVector<QVector<QVector<QString> > > &vec)
 {
     QString ret;
     ret = QString("%1,%2,%3|").arg(vec.size()).arg(vec[0].size()).arg(vec[0][0].size());
@@ -176,7 +176,7 @@ QString dfCopyPastePng::stringFrom3dVector(const QVector<QVector<QVector<QString
     }
     return(ret);
 }
-QVector<QVector<QVector<QString> > > dfCopyPastePng::ThreeDVectorFromString(QString str)
+QVector<QVector<QVector<QString> > > DwarfClipboardPng::ThreeDVectorFromString(QString str)
 {
     if(str.isEmpty()){
         return QVector<QVector<QVector<QString> > >();
@@ -200,7 +200,7 @@ QVector<QVector<QVector<QString> > > dfCopyPastePng::ThreeDVectorFromString(QStr
     }
     return vec;
 }
-QList< QImage> dfCopyPastePng::regenerateImages(dfCopyObj & obj)
+QList< QImage> DwarfClipboardPng::regenerateImages(DwarfClipboardCopyObj & obj)
 {
     QList<QImage> retImages;
     QVector<QVector<QVector<QString > > > dig = obj.getDig();
@@ -244,7 +244,7 @@ QList< QImage> dfCopyPastePng::regenerateImages(dfCopyObj & obj)
     }
     return(retImages);
 }
-QList< int > dfCopyPastePng::getBorders(const QVector<QVector<QVector<QString > > > &dig,cursorIdx cur)
+QList< int > DwarfClipboardPng::getBorders(const QVector<QVector<QVector<QString > > > &dig,cursorIdx cur)
 {
     int pos = 9;
     QList<int> ret;
@@ -264,7 +264,7 @@ QList< int > dfCopyPastePng::getBorders(const QVector<QVector<QVector<QString > 
 }
 
 
-void dfCopyPastePng::waitTillDigMenuClear()
+void DwarfClipboardPng::waitTillDigMenuClear()
 {
     DFHack::Position * Pos = DF->getPosition();
     DFHack::WindowIO * Win = DF->getWindowIO();
@@ -282,7 +282,7 @@ void dfCopyPastePng::waitTillDigMenuClear()
     }
 }
 
-void dfCopyPastePng::waitTillScreenPosition(cursorIdx check)
+void DwarfClipboardPng::waitTillScreenPosition(cursorIdx check)
 {
     DFHack::Position * p = DF->getPosition();
     DFHack::WindowIO * w = DF->getWindowIO();
@@ -295,11 +295,11 @@ void dfCopyPastePng::waitTillScreenPosition(cursorIdx check)
     }
     w->TypeSpecial(DFHack::WAIT,1,delay);
 }
-void dfCopyPastePng::setTransparency(QImage* toSet)
+void DwarfClipboardPng::setTransparency(QImage* toSet)
 {
     toSet->setAlphaChannel(toSet->createMaskFromColor(QColor(255,0,255).rgba(),Qt::MaskOutColor));
 }
-void dfCopyPastePng::readConfig(QString FileName)
+void DwarfClipboardPng::readConfig(QString FileName)
 {
     QFile file(FileName);
     file.open(QFile::ReadOnly);
@@ -310,7 +310,7 @@ void dfCopyPastePng::readConfig(QString FileName)
     }
     file.close();
 }
-QImage dfCopyPastePng::getTileFromScreen(DFHack::t_screen screen)
+QImage DwarfClipboardPng::getTileFromScreen(DFHack::t_screen screen)
 {
     QColor foregroundColor = getForegroundColorFromScreen(screen);
     QColor backgroundColor = getBackgroundColorFromScreen(screen);
@@ -336,7 +336,7 @@ QImage dfCopyPastePng::getTileFromScreen(DFHack::t_screen screen)
     }
     return(resultImage);
 }
-void dfCopyPastePng::processLine(QString line)
+void DwarfClipboardPng::processLine(QString line)
 {
     if(line.startsWith("[")){
         QString Color, Channel,Value;
@@ -356,7 +356,7 @@ void dfCopyPastePng::processLine(QString line)
         }
     }
 }
-QColor dfCopyPastePng::getForegroundColorFromScreen(DFHack::t_screen tile)
+QColor DwarfClipboardPng::getForegroundColorFromScreen(DFHack::t_screen tile)
 {
     if(tile.bright == 0){
         switch (tile.foreground){
@@ -400,7 +400,7 @@ QColor dfCopyPastePng::getForegroundColorFromScreen(DFHack::t_screen tile)
     }
     return QColor();
 }
-QColor dfCopyPastePng::getBackgroundColorFromScreen(DFHack::t_screen tile)
+QColor DwarfClipboardPng::getBackgroundColorFromScreen(DFHack::t_screen tile)
 {
         switch (tile.background){
             case 0:

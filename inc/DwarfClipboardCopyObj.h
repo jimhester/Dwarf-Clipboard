@@ -1,18 +1,18 @@
-#ifndef dfCopyObj_H
-#define dfCopyObj_H
+#ifndef DwarfClipboardCopyObj_H
+#define DwarfClipboardCopyObj_H
 
 #include "common.h"
 #include "dfLocationIterator.h"
-#include "dfCopyPastePng.h"
+#include "DwarfClipboardPng.h"
 #include <QList>
 #include <QString>
 #include <QVariant>
 #include <QImage>
 #include <QColor>
 
-class dfCopyObj;
+class DwarfClipboardCopyObj;
 
-class dfCopyObj
+class DwarfClipboardCopyObj
 {
 private:
     int idx;
@@ -29,28 +29,28 @@ private:
     QList<QImage> images;
     QString Name;
     QString Comment;
-	QList<dfCopyObj*> childItems;
-	dfCopyObj *parentItem;
+	QList<DwarfClipboardCopyObj*> childItems;
+	DwarfClipboardCopyObj *parentItem;
     QList<QImage> imageListFromTiledImages(const QImage &image);
     int defaultIndex;
     static bool useOriginal;
     static DFHack::Context *DF;
 	QList<QImage> originalImages;
     static QMap<QString,QString>buildCommands;
-    cursorIdx lastPaste;
+    cursorIdx prevPaste;
 public:
-    dfCopyObj(dfCopyObj *parent = 0);
-    dfCopyObj(cursorIdx c1, cursorIdx c2,dfCopyObj *parent = 0);
-    dfCopyObj(QImage img,dfCopyObj *parent = 0);
-	dfCopyObj::~dfCopyObj();
-	void appendChild(dfCopyObj *child);
-	void prependChild(dfCopyObj *child);
-	void insertChild(int position,dfCopyObj *child);
+    DwarfClipboardCopyObj(DwarfClipboardCopyObj *parent = 0);
+    DwarfClipboardCopyObj(cursorIdx c1, cursorIdx c2,DwarfClipboardCopyObj *parent = 0);
+    DwarfClipboardCopyObj(QImage img,DwarfClipboardCopyObj *parent = 0);
+	DwarfClipboardCopyObj::~DwarfClipboardCopyObj();
+	void appendChild(DwarfClipboardCopyObj *child);
+	void prependChild(DwarfClipboardCopyObj *child);
+	void insertChild(int position,DwarfClipboardCopyObj *child);
 	void removeChildAt(int position);
-	dfCopyObj *child(int row);
+	DwarfClipboardCopyObj *child(int row);
 	int childCount() const;
 	int row() const;
-	dfCopyObj *parent();
+	DwarfClipboardCopyObj *parent();
 	static void setOriginalState(int state);
     QVector<QVector<QVector<QString > > > getDig() const { return dig; };
     QVector<QVector<QVector<QString > > > getBuild() const { return build; } ;
@@ -67,13 +67,13 @@ public:
     QString getComment()const { return Comment; };
     void setName(QString n);
     void setComment(QString c);
-	void setParent(dfCopyObj *parent){ parentItem = parent; };
+	void setParent(DwarfClipboardCopyObj *parent){ parentItem = parent; };
     QList<cursorIdx> getRange()const { return pos; };
     void pasteDesignations(cursorIdx location);
     void pasteBuildings(cursorIdx location);
     void recalcImages();
     static void setDF(DFHack::Context *tDF);
     static void setBuildCommands(QMap<QString,QString> commands);
-    cursorIdx getLastPastePoint();
+    cursorIdx getPrevPastePoint();
 };
 #endif

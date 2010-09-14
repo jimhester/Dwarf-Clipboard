@@ -1,5 +1,5 @@
-//Base code adapted from Trolltech tutorial at http://doc.trolltech.com/4.2/desktop-dfCopyPaste-main-cpp.html
-//Modified and extended for dfCopyPaste by Jim Hester (belal)
+//Base code adapted from Trolltech tutorial at http://doc.trolltech.com/4.2/desktop-DwarfClipboard-main-cpp.html
+//Modified and extended for DwarfClipboard by Jim Hester (belal)
 /****************************************************************************
 **
 ** Copyright (C) 2006-2007 Trolltech ASA. All rights reserved.
@@ -28,9 +28,9 @@
 #include <QtGui>
 #include <QtDebug>
 
-#include "inc/dfCopyPaste.h"
-#include "inc/dfCopyPastePng.h"
-#include "ui_dfCopyPaste.h"
+#include "inc/DwarfClipboard.h"
+#include "inc/DwarfClipboardPng.h"
+#include "ui_DwarfClipboard.h"
 #include <QxtGlobalShortcut>
 #include <QTextStream>
 #define DFHACK_WANT_MISCUTILS
@@ -39,15 +39,15 @@
 #include "dfhack/modules/WindowIO.h"
 #include "inc/getShortcutDialog.h"
 
-dfCopyPaste::dfCopyPaste()
+DwarfClipboard::DwarfClipboard()
 {
 
     setupUi(this);
     createActions();
     createTrayIcon();
-    trayIcon->setIcon(QIcon(":/icons/images/dfCopyPaste.png"));
+    trayIcon->setIcon(QIcon(":/icons/images/DwarfClipboard.png"));
     trayIcon->show();
-    setWindowTitle(tr("dfCopyPaste"));
+    setWindowTitle(tr("DwarfClipboard"));
     inputDelay = 100;
     thumbnailSize = 64;
     prevCursor.x = -30000;
@@ -56,20 +56,22 @@ dfCopyPaste::dfCopyPaste()
     connectedLabel = new QLabel();
 	createConnections();
 	loadConfig();
-    recentModel = new dfCopyModel();
+    recentModel = new DwarfClipboardModel();
     tableViewRecent->setModel(recentModel);
-    libraryModel = new dfCopyModel();
+    libraryModel = new DwarfClipboardModel();
     treeViewLibrary->setModel(libraryModel);
 
     connected = connectToDF();
     thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnailSize));
     inputDelayMsLineEdit->setText(QString("%1").arg(inputDelay));
 
-	tilesetPathButton->setText(dfCopyPastePng::getTileSetPath());
-	colorPathButton->setText(dfCopyPastePng::getColorPath());
+	tilesetPathButton->setText(DwarfClipboardPng::getTileSetPath());
+	colorPathButton->setText(DwarfClipboardPng::getColorPath());
 
     copyShortcutButton->setText(copyShortcut->shortcut());
     pasteDesignationShortcutButton->setText(pasteDesignationShortcut->shortcut());
+    pasteBuildingShortcutButton->setText(pasteBuildingShortcut->shortcut());
+    setCursorToPreviousPasteShortcutButton->setText(setCursorToPreviousPasteShortcut->shortcut());
     
     heartbeatTimer->start(1000);
 
@@ -95,7 +97,7 @@ dfCopyPaste::dfCopyPaste()
     }
     setupViews();   
 }
-void dfCopyPaste::heartbeat()
+void DwarfClipboard::heartbeat()
 {
     bool result = true;
     if(!DF || !DF->isValid()){
@@ -122,32 +124,32 @@ void dfCopyPaste::heartbeat()
         setConnected();
     }
 }
-void dfCopyPaste::setConnected()
+void DwarfClipboard::setConnected()
 {
     if(!connected){ //coming from a disconnected state, so load the library
         recentModel->setDF(DF);
         libraryModel->setDF(DF);
-        dfCopyObj::setDF(DF);
-        dfCopyPastePng::setDF(DF);
+        DwarfClipboardCopyObj::setDF(DF);
+        DwarfClipboardPng::setDF(DF);
         connectedLabel->setPixmap(connectedIcon);
         Ui_MainWindow::statusBar->showMessage("Connected");
         connected = true;
     }
 }
-void dfCopyPaste::setDisconnected()
+void DwarfClipboard::setDisconnected()
 {
     if(connected){ //coming from a connected state, change icon and DF pointers
         DF = 0;
         recentModel->setDF(DF);
         libraryModel->setDF(DF);
-        dfCopyObj::setDF(DF);
-        dfCopyPastePng::setDF(DF);
+        DwarfClipboardCopyObj::setDF(DF);
+        DwarfClipboardPng::setDF(DF);
         connectedLabel->setPixmap(disconnectedIcon);
         Ui_MainWindow::statusBar->showMessage("Disconnected");
         connected = false;
     }
 }
-void dfCopyPaste::createShortcuts()
+void DwarfClipboard::createShortcuts()
 {
     copyShortcut = new QxtGlobalShortcut(this);
     connect(copyShortcut, SIGNAL(activated()), this, SLOT(copy()));
@@ -157,12 +159,20 @@ void dfCopyPaste::createShortcuts()
     connect(pasteDesignationShortcut, SIGNAL(activated()), this, SLOT(pasteDesignations()));
     pasteDesignationShortcut->setShortcut(QKeySequence("Ctrl+Shift+D"));
 
+    pasteBuildingShortcut = new QxtGlobalShortcut(this);
+    connect(pasteBuildingShortcut, SIGNAL(activated()), this, SLOT(pasteBuildings()));
+    pasteBuildingShortcut->setShortcut(QKeySequence("Ctrl+Shift+B"));
+
     QShortcut* deleteShortcut = new QShortcut(this);
     deleteShortcut->setKey(QKeySequence(QKeySequence::Delete));
     connect(deleteShortcut, SIGNAL(activated()),this,SLOT(deleteSelected()));
+
+    setCursorToPreviousPasteShortcut = new QxtGlobalShortcut(this);
+    connect(setCursorToPreviousPasteShortcut,SIGNAL(activated()),this,SLOT(setPreviousPos()));
+    setCursorToPreviousPasteShortcut->setShortcut(QKeySequence("Ctrl+Shift+P"));
 }
 
-void dfCopyPaste::createConnections()
+void DwarfClipboard::createConnections()
 {
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
@@ -176,9 +186,14 @@ void dfCopyPaste::createConnections()
     connect(pushButtonRecentPasteBuildings,SIGNAL(clicked()),this,SLOT(pasteBuildings()));
     connect(pushButtonLibraryPasteBuildings,SIGNAL(clicked()),this,SLOT(pasteBuildings()));
     connect(pushButtonLibraryReload,SIGNAL(clicked()),this,SLOT(reloadLibrary()));
+    connect(pushButtonRecentSetCursorPrev,SIGNAL(clicked()),this,SLOT(setPreviousPos()));
+    connect(pushButtonLibrarySetCursorPrev,SIGNAL(clicked()),this,SLOT(setPreviousPos()));
 
 	connect(copyShortcutButton,SIGNAL(clicked()),this,SLOT(getCopyShortcut()));
 	connect(pasteDesignationShortcutButton,SIGNAL(clicked()),this,SLOT(getPasteDesignationShortcut()));
+    connect(pasteBuildingShortcutButton,SIGNAL(clicked()),this,SLOT(getPasteBuildingShortcut()));
+    connect(setCursorToPreviousPasteShortcutButton,SIGNAL(clicked()),this,SLOT(getSetCursorToPreviousPasteShortcut()));
+
     connect(thumbnailSizeLineEdit,SIGNAL(editingFinished()),this,SLOT(thumbnailSizeChanged()));
     connect(inputDelayMsLineEdit,SIGNAL(editingFinished()),this,SLOT(inputDelayChanged()));
 	connect(tilesetPathButton,SIGNAL(clicked()),this,SLOT(getTilesetPathUser()));
@@ -190,25 +205,25 @@ void dfCopyPaste::createConnections()
 	connect(useOriginalTilesetImagesCheckBox,SIGNAL(stateChanged(int)),this,SLOT(useOriginal(int)));
     connect(heartbeatTimer,SIGNAL(timeout()),this,SLOT(heartbeat()));
 }
-void dfCopyPaste::useOriginal(int state)
+void DwarfClipboard::useOriginal(int state)
 {
-	dfCopyObj::setOriginalState(state);
+	DwarfClipboardCopyObj::setOriginalState(state);
 }
-void dfCopyPaste::copyToLibrary()
+void DwarfClipboard::copyToLibrary()
 {
     QModelIndex idx;   
     foreach(idx, tableViewRecent->selectionModel()->selectedRows())
     {
         if(idx.isValid())
         {
-            dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
-            dfCopyObj *item2 = new dfCopyObj(*item);
+            DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(idx.internalPointer());
+            DwarfClipboardCopyObj *item2 = new DwarfClipboardCopyObj(*item);
             libraryModel->appendData(item2);
         }
     }
     setupViews();
 }
-void dfCopyPaste::removeDirectory(QDir current)
+void DwarfClipboard::removeDirectory(QDir current)
 {
     QImage img;
     QString fileName;
@@ -226,14 +241,14 @@ void dfCopyPaste::removeDirectory(QDir current)
     }
 }    
 
-void dfCopyPaste::saveLibrary(QDir current, dfCopyObj* parent)
+void DwarfClipboard::saveLibrary(QDir current, DwarfClipboardCopyObj* parent)
 {
 
     if(parent == NULL){ //start of the save
         parent = libraryModel->getRoot();
         removeDirectory(current);
     }
-    dfCopyObj* child;
+    DwarfClipboardCopyObj* child;
     for(int i = 0;i < parent->childCount();i++){
         child = parent->child(i);
         if(child->getImage().isNull()){
@@ -248,7 +263,7 @@ void dfCopyPaste::saveLibrary(QDir current, dfCopyObj* parent)
     }
 }         
 
-void dfCopyPaste::setupViews()
+void DwarfClipboard::setupViews()
 {
     tableViewRecent->setIconSize(QSize(thumbnailSize,thumbnailSize));
     tableViewRecent->resizeColumnToContents(0);
@@ -256,7 +271,7 @@ void dfCopyPaste::setupViews()
     treeViewLibrary->setIconSize(QSize(thumbnailSize,thumbnailSize));
     treeViewLibrary->resizeColumnToContents(0);
 }
-void dfCopyPaste::getPasteDesignationShortcut()
+void DwarfClipboard::getPasteDesignationShortcut()
 {
 	QKeySequence seq = getShortcutDialog::getKeySequence(this);
     if(!seq.isEmpty()){
@@ -264,7 +279,15 @@ void dfCopyPaste::getPasteDesignationShortcut()
 		pasteDesignationShortcutButton->setText(pasteDesignationShortcut->shortcut().toString());
     }
 }
-void dfCopyPaste::getCopyShortcut()
+void DwarfClipboard::getPasteBuildingShortcut()
+{
+	QKeySequence seq = getShortcutDialog::getKeySequence(this);
+    if(!seq.isEmpty()){
+        pasteBuildingShortcut->setShortcut(seq);
+		pasteBuildingShortcutButton->setText(pasteBuildingShortcut->shortcut().toString());
+    }
+}
+void DwarfClipboard::getCopyShortcut()
 {
 	QKeySequence seq = getShortcutDialog::getKeySequence(this);
     if(!seq.isEmpty()){
@@ -272,51 +295,59 @@ void dfCopyPaste::getCopyShortcut()
 		copyShortcutButton->setText(copyShortcut->shortcut().toString());
     }
 }
-void dfCopyPaste::getTilesetPathUser()
+void DwarfClipboard::getSetCursorToPreviousPasteShortcut()
 {
-	QString newPath = QFileDialog::getOpenFileName(this,"Select Tileset to Use",dfCopyPastePng::getTileSetPath(),"Images (*.png *.bmp)");
-    if(!newPath.isEmpty())
-    {
-    	dfCopyPastePng::setTileSetPath(newPath);
-	    tilesetPathButton->setText(dfCopyPastePng::getTileSetPath());
-        recalcAllDfCopyObj();
+    QKeySequence seq = getShortcutDialog::getKeySequence(this);
+    if(!seq.isEmpty()){
+        setCursorToPreviousPasteShortcut->setShortcut(seq);
+		setCursorToPreviousPasteShortcutButton->setText(setCursorToPreviousPasteShortcut->shortcut().toString());
     }
 }
-void dfCopyPaste::getColorPathUser()
+void DwarfClipboard::getTilesetPathUser()
 {
-	QString newPath = QFileDialog::getOpenFileName(this,"Select Color file",dfCopyPastePng::getColorPath(),"Color Files (*.txt)");
+	QString newPath = QFileDialog::getOpenFileName(this,"Select Tileset to Use",DwarfClipboardPng::getTileSetPath(),"Images (*.png *.bmp)");
     if(!newPath.isEmpty())
     {
-	    dfCopyPastePng::setColorPath(newPath);
-	    colorPathButton->setText(dfCopyPastePng::getColorPath());
-        recalcAllDfCopyObj();
+    	DwarfClipboardPng::setTileSetPath(newPath);
+	    tilesetPathButton->setText(DwarfClipboardPng::getTileSetPath());
+        recalcAllDwarfClipboardCopyObj();
     }
 }
-void dfCopyPaste::recalcAllDfCopyObj()
+void DwarfClipboard::getColorPathUser()
 {
-    recalcDfCopyObj(recentModel->getRoot());
-    recalcDfCopyObj(libraryModel->getRoot());
+	QString newPath = QFileDialog::getOpenFileName(this,"Select Color file",DwarfClipboardPng::getColorPath(),"Color Files (*.txt)");
+    if(!newPath.isEmpty())
+    {
+	    DwarfClipboardPng::setColorPath(newPath);
+	    colorPathButton->setText(DwarfClipboardPng::getColorPath());
+        recalcAllDwarfClipboardCopyObj();
+    }
 }
-void dfCopyPaste::recalcDfCopyObj(dfCopyObj* item)
+void DwarfClipboard::recalcAllDwarfClipboardCopyObj()
+{
+    recalcDwarfClipboardCopyObj(recentModel->getRoot());
+    recalcDwarfClipboardCopyObj(libraryModel->getRoot());
+}
+void DwarfClipboard::recalcDwarfClipboardCopyObj(DwarfClipboardCopyObj* item)
 {
     item->recalcImages();
     for(int i =0;i<item->childCount();++i)
     {
-        recalcDfCopyObj(item->child(i));
+        recalcDwarfClipboardCopyObj(item->child(i));
     }
 }
-void dfCopyPaste::getTilesetPathDf()
+void DwarfClipboard::getTilesetPathDf()
 {
     if(!connected)
         return;
     QString tileSetPath = readDFInitFile();
     QFile DFExe(DF->getProcess()->getPath().c_str());
     QString newPath = DFExe.fileName().left(DFExe.fileName().lastIndexOf('/')) + "/data/art/" + tileSetPath;
-    dfCopyPastePng::setTileSetPath(newPath);
-	tilesetPathButton->setText(dfCopyPastePng::getTileSetPath());
-    recalcAllDfCopyObj();
+    DwarfClipboardPng::setTileSetPath(newPath);
+	tilesetPathButton->setText(DwarfClipboardPng::getTileSetPath());
+    recalcAllDwarfClipboardCopyObj();
 }
-QString dfCopyPaste::readDFInitFile()
+QString DwarfClipboard::readDFInitFile()
 {
     bool windowed = false;
     bool graphics = false;
@@ -376,33 +407,33 @@ QString dfCopyPaste::readDFInitFile()
 }
 
 
-void dfCopyPaste::getColorPathDf()
+void DwarfClipboard::getColorPathDf()
 {
     if(!connected)
         return;
     QFile DFExe(DF->getProcess()->getPath().c_str());
     QString newPath = DFExe.fileName().left(DFExe.fileName().lastIndexOf('/')) + "/data/init/colors.txt";
-    dfCopyPastePng::setColorPath(newPath);
-	colorPathButton->setText(dfCopyPastePng::getColorPath());
-    recalcAllDfCopyObj();
+    DwarfClipboardPng::setColorPath(newPath);
+	colorPathButton->setText(DwarfClipboardPng::getColorPath());
+    recalcAllDwarfClipboardCopyObj();
 }
-void dfCopyPaste::inputDelayChanged()
+void DwarfClipboard::inputDelayChanged()
 {
     inputDelay = inputDelayMsLineEdit->text().toInt();
-    dfCopyPastePng::setDelay(inputDelay);
+    DwarfClipboardPng::setDelay(inputDelay);
 }
-void dfCopyPaste::thumbnailSizeChanged()
+void DwarfClipboard::thumbnailSizeChanged()
 {
     thumbnailSize = thumbnailSizeLineEdit->text().toInt();
     tableViewRecent->setIconSize(QSize(thumbnailSize,thumbnailSize));
     treeViewLibrary->setIconSize(QSize(thumbnailSize,thumbnailSize));
     setupViews();
 }
-void dfCopyPaste::deleteSelected()
+void DwarfClipboard::deleteSelected()
 {
     QItemSelectionModel* selectModel;
     QModelIndex idx;
-    dfCopyModel* model;
+    DwarfClipboardModel* model;
     if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0)
     {
         return;
@@ -424,7 +455,7 @@ void dfCopyPaste::deleteSelected()
         selected = selectModel->selectedRows();
     }
 }
-void dfCopyPaste::save()
+void DwarfClipboard::save()
 {
     QItemSelectionModel* selectModel;
     QModelIndex idx;
@@ -443,7 +474,7 @@ void dfCopyPaste::save()
     
     foreach(idx, selectModel->selectedRows())
     {
-	    dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+	    DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(idx.internalPointer());
         if(idx.isValid()){
             QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
                                 ".",
@@ -453,11 +484,11 @@ void dfCopyPaste::save()
         }
     }
 }
-void dfCopyPaste::load()
+void DwarfClipboard::load()
 {
     QImage img;
     QString fileName;
-    dfCopyModel* model;
+    DwarfClipboardModel* model;
     if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0){
         return;
     }
@@ -473,40 +504,40 @@ void dfCopyPaste::load()
     {
 
         img.load(fileName);
-        dfCopyObj* data = new dfCopyObj(img);
+        DwarfClipboardCopyObj* data = new DwarfClipboardCopyObj(img);
             QModelIndex idx;
     
         model->prependData(data);
     }
     setupViews();
 }
-void dfCopyPaste::reloadLibrary()
+void DwarfClipboard::reloadLibrary()
 {
     libraryModel->clear();
     loadDirectory("library");
     setupViews();
 }
-void dfCopyPaste::loadDirectory(QString directory,dfCopyObj * parent)
+void DwarfClipboard::loadDirectory(QString directory,DwarfClipboardCopyObj * parent)
 {
     QImage img;
     QString fileName;
     QFileInfo file;
     foreach(file, QDir(directory).entryInfoList(QDir::NoFilter,QDir::DirsFirst | QDir::Name)){
         if(file.isDir() && file.fileName()!= "." && file.fileName() != ".."){
-            dfCopyObj* dir = new dfCopyObj(parent);
+            DwarfClipboardCopyObj* dir = new DwarfClipboardCopyObj(parent);
             dir->setName(file.fileName());
             libraryModel->appendData(dir,parent);
             loadDirectory(file.filePath(),dir);
         }
         else if(file.suffix() == "png"){
             img.load(file.absoluteFilePath());
-            dfCopyObj* data = new dfCopyObj(img,parent);
+            DwarfClipboardCopyObj* data = new DwarfClipboardCopyObj(img,parent);
             libraryModel->appendData(data,parent);
         }
     }
 }
         
-bool dfCopyPaste::connectToDF()
+bool DwarfClipboard::connectToDF()
 {
     try
     {
@@ -527,9 +558,9 @@ bool dfCopyPaste::connectToDF()
         DF=0;
         return false;
     }
-
+    return true;
 }
-void dfCopyPaste::setVisible(bool visible)
+void DwarfClipboard::setVisible(bool visible)
 {
     minimizeAction->setEnabled(visible);
     maximizeAction->setEnabled(!isMaximized());
@@ -537,11 +568,11 @@ void dfCopyPaste::setVisible(bool visible)
     QWidget::setVisible(visible);
 }
 
-void dfCopyPaste::closeEvent(QCloseEvent *event)
+void DwarfClipboard::closeEvent(QCloseEvent *event)
 {
     if (trayIcon->isVisible()) {
-        QMessageBox::information(this, tr("dfCopyPaste"),
-                                 tr("dfCopyPaste will keep running in the "
+        QMessageBox::information(this, tr("DwarfClipboard"),
+                                 tr("DwarfClipboard will keep running in the "
                                     "system tray. To terminate the program, "
                                     "choose <b>Quit</b> in the system tray."));
         hide();
@@ -549,7 +580,7 @@ void dfCopyPaste::closeEvent(QCloseEvent *event)
     }
 }
 
-void dfCopyPaste::setIcon(int index){    
+void DwarfClipboard::setIcon(int index){    
     QIcon icon = iconComboBox->itemIcon(index);
     trayIcon->setIcon(icon);
     setWindowIcon(icon);
@@ -557,7 +588,7 @@ void dfCopyPaste::setIcon(int index){
     trayIcon->setToolTip(iconComboBox->itemText(index));
 }
 
-void dfCopyPaste::iconActivated(QSystemTrayIcon::ActivationReason reason)
+void DwarfClipboard::iconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::Trigger:
@@ -574,7 +605,7 @@ void dfCopyPaste::iconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
-void dfCopyPaste::showMessage()
+void DwarfClipboard::showMessage()
 {
     QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::MessageIcon(
             typeComboBox->itemData(typeComboBox->currentIndex()).toInt());
@@ -582,7 +613,7 @@ void dfCopyPaste::showMessage()
                           durationSpinBox->value() * 1000);
 }
 
-void dfCopyPaste::copy()
+void DwarfClipboard::copy()
 {
     if(!connected)
         return;
@@ -601,8 +632,8 @@ void dfCopyPaste::copy()
                 trayIcon->showMessage(tr("df Copy"),tr("Please place the df cursor"));
         }
         else{
-            trayIcon->showMessage(tr("df Copy"),tr("Region Selected, press %1 to paste or %2 to start a new copy").arg(pasteDesignationShortcut->shortcut().toString()).arg(copyShortcut->shortcut().toString()));
-            dfCopyObj * newObj = new dfCopyObj(prevCursor,tempCursor);
+            trayIcon->showMessage(tr("df Copy"),tr("Region Selected, press %1 to paste designation, %2 to paste buildings or %3 to start a new copy").arg(pasteDesignationShortcut->shortcut().toString()).arg(pasteBuildingShortcut->shortcut().toString()).arg(copyShortcut->shortcut().toString()));
+            DwarfClipboardCopyObj * newObj = new DwarfClipboardCopyObj(prevCursor,tempCursor);
             recentModel->prependData(newObj);
             tableViewRecent->selectRow(0);
             setupViews();
@@ -610,8 +641,27 @@ void dfCopyPaste::copy()
         }
     }
 }
-
-void dfCopyPaste::pasteDesignations()
+void DwarfClipboard::setPreviousPos()
+{
+    if(!connected)
+        return;
+    QModelIndex idx;
+    if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0){
+        return;
+    }
+    if(TabWidget->currentIndex() == 0){
+        idx = tableViewRecent->currentIndex();
+    }
+    if(TabWidget->currentIndex() == 1){
+        idx = treeViewLibrary->currentIndex();
+    }
+	if(idx.isValid()){
+        DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(idx.internalPointer());
+        cursorIdx prev = item->getPrevPastePoint();
+        Pos->setCursorCoords(prev.x,prev.y,prev.z);
+    }
+}
+void DwarfClipboard::pasteDesignations()
 {
     if(!connected)
         return;
@@ -633,12 +683,12 @@ void dfCopyPaste::pasteDesignations()
 		else
 		{
 			trayIcon->showMessage( tr("df Paste"),tr("Pasting!"));
-			dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+			DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(idx.internalPointer());
 			item->pasteDesignations(tempCursor);
 		}
 	}
 }
-void dfCopyPaste::pasteBuildings()
+void DwarfClipboard::pasteBuildings()
 {
     if(!connected)
         return;
@@ -660,19 +710,19 @@ void dfCopyPaste::pasteBuildings()
 		else
 		{
 			trayIcon->showMessage( tr("df Paste"),tr("Pasting!"));
-			dfCopyObj *item = static_cast<dfCopyObj*>(idx.internalPointer());
+			DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(idx.internalPointer());
 			item->pasteBuildings(tempCursor);
 		}
 	}
 }
-void dfCopyPaste::messageClicked()
+void DwarfClipboard::messageClicked()
 {
-    QMessageBox::information(0, tr("dfCopyPaste"),
+    QMessageBox::information(0, tr("DwarfClipboard"),
                              tr("Sorry, I already gave what help I could.\n"
                                 "Maybe you should try asking a human?"));
 }
 
-void dfCopyPaste::createIconGroupBox()
+void DwarfClipboard::createIconGroupBox()
 {
     iconGroupBox = new QGroupBox(tr("Tray Icon"));
 
@@ -691,7 +741,7 @@ void dfCopyPaste::createIconGroupBox()
     iconGroupBox->setLayout(iconLayout);
 }
 
-void dfCopyPaste::createActions()
+void DwarfClipboard::createActions()
 {
     minimizeAction = new QAction(tr("Mi&nimize"), this);
     connect(minimizeAction, SIGNAL(triggered()), this, SLOT(hide()));
@@ -705,7 +755,7 @@ void dfCopyPaste::createActions()
     quitAction = new QAction(tr("&Quit"), this);
     connect(quitAction, SIGNAL(triggered()), this, SLOT(saveAndQuit()));
 }
-void dfCopyPaste::loadConfig()
+void DwarfClipboard::loadConfig()
 {
     QFile inFile("config.ini");
     if(inFile.exists())
@@ -720,6 +770,12 @@ void dfCopyPaste::loadConfig()
             else if (list.at(0) == "pasteDesignation"){
                 pasteDesignationShortcut->setShortcut(QKeySequence(list.at(1)));
             }
+            else if (list.at(0) == "pasteBuilding"){
+                pasteBuildingShortcut->setShortcut(QKeySequence(list.at(1)));
+            }
+            else if (list.at(0) == "setCursorPreviousPaste"){
+                setCursorToPreviousPasteShortcut->setShortcut(QKeySequence(list.at(1)));
+            }
             else if (list.at(0) == "thumbnailSize"){
                 thumbnailSize = list.at(1).toInt();
             }
@@ -727,17 +783,17 @@ void dfCopyPaste::loadConfig()
                 inputDelay = list.at(1).toInt();
             }
 			else if(list.at(0) == "tilesetPath"){
-				dfCopyPastePng::setTileSetPath(list.at(1));
+				DwarfClipboardPng::setTileSetPath(list.at(1));
 			}
 			else if(list.at(0) == "colorPath"){
-				dfCopyPastePng::setColorPath(list.at(1));
+				DwarfClipboardPng::setColorPath(list.at(1));
 			}
         }
         inFile.close();
     }
 }
 
-void dfCopyPaste::loadBuildCommands()
+void DwarfClipboard::loadBuildCommands()
 {
     QMap<QString, QString> commands;
     QFile inFile("buildCommands.ini");
@@ -750,24 +806,26 @@ void dfCopyPaste::loadBuildCommands()
             commands[list.at(0)]=list.at(1);
         }
     }
-    dfCopyObj::setBuildCommands(commands);
+    DwarfClipboardCopyObj::setBuildCommands(commands);
 }
     
-void dfCopyPaste::saveAndQuit()
+void DwarfClipboard::saveAndQuit()
 {
     QFile outFile("config.ini");
     outFile.open(QIODevice::WriteOnly);
     QTextStream out(&outFile);
     out << "copy;" << copyShortcut->shortcut().toString() << '\n';
     out << "pasteDesignation;" << pasteDesignationShortcut->shortcut().toString() << '\n';
+    out << "pasteBuilding;" << pasteBuildingShortcut->shortcut().toString() << '\n';
+    out << "setCursorPreviousPaste;" << setCursorToPreviousPasteShortcut->shortcut().toString() << '\n';
     out << "thumbnailSize;" << thumbnailSize << '\n';
     out << "inputDelay;" << inputDelay << '\n';
-	out << "tilesetPath;" << dfCopyPastePng::getTileSetPath() << '\n';
-	out << "colorPath;" << dfCopyPastePng::getColorPath() << '\n';
+	out << "tilesetPath;" << DwarfClipboardPng::getTileSetPath() << '\n';
+	out << "colorPath;" << DwarfClipboardPng::getColorPath() << '\n';
     outFile.close();
     qApp->quit();
 }
-void dfCopyPaste::createTrayIcon()
+void DwarfClipboard::createTrayIcon()
 {
     trayIconMenu = new QMenu(this);
     trayIconMenu->addAction(minimizeAction);

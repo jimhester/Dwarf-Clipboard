@@ -1,12 +1,12 @@
-#include "inc\dfCopyObj.h"
+#include "inc\DwarfClipboardCopyObj.h"
 #include "inc\common.h"
 #include <QPainter>
 
-bool dfCopyObj::useOriginal = false;
-DFHack::Context* dfCopyObj::DF=0;
-QMap<QString,QString> dfCopyObj::buildCommands= QMap<QString,QString>();
+bool DwarfClipboardCopyObj::useOriginal = false;
+DFHack::Context* DwarfClipboardCopyObj::DF=0;
+QMap<QString,QString> DwarfClipboardCopyObj::buildCommands= QMap<QString,QString>();
 
-dfCopyObj::dfCopyObj(dfCopyObj *parent)
+DwarfClipboardCopyObj::DwarfClipboardCopyObj(DwarfClipboardCopyObj *parent)
 {
     cursorIdx temp;
     temp.x = temp.y = temp.z = -30000;
@@ -14,10 +14,10 @@ dfCopyObj::dfCopyObj(dfCopyObj *parent)
     idx = 0;
     defaultIndex = 0;
 	parentItem = parent;
-    lastPaste.x = lastPaste.y = lastPaste.z = -30000;
+    prevPaste.x = prevPaste.y = prevPaste.z = -30000;
 }
 
-dfCopyObj::dfCopyObj(cursorIdx c1, cursorIdx c2, dfCopyObj *parent)
+DwarfClipboardCopyObj::DwarfClipboardCopyObj(cursorIdx c1, cursorIdx c2, DwarfClipboardCopyObj *parent)
 {
     pos << c1 << c2;
     setupVectors();
@@ -26,11 +26,11 @@ dfCopyObj::dfCopyObj(cursorIdx c1, cursorIdx c2, dfCopyObj *parent)
     idx = 0;
     defaultIndex = 0;
 	parentItem = parent;
-    lastPaste.x = lastPaste.y = lastPaste.z = -30000;
+    prevPaste.x = prevPaste.y = prevPaste.z = -30000;
 }
-dfCopyObj::dfCopyObj(QImage img,dfCopyObj *parent)
+DwarfClipboardCopyObj::DwarfClipboardCopyObj(QImage img,DwarfClipboardCopyObj *parent)
 {
-    dfCopyPastePng png;
+    DwarfClipboardPng png;
     dig = png.ThreeDVectorFromString(img.text("dig"));
     build = png.ThreeDVectorFromString(img.text("build"));
     images = png.ImagesFromString(img.text("rawNumbers"));
@@ -40,16 +40,16 @@ dfCopyObj::dfCopyObj(QImage img,dfCopyObj *parent)
 	parentItem = parent;
 	originalImages = imageListFromTiledImages(img);
     defaultIndex = 0;
-    lastPaste.x = lastPaste.y = lastPaste.z = -30000;
+    prevPaste.x = prevPaste.y = prevPaste.z = -30000;
 }
-void dfCopyObj::recalcImages()
+void DwarfClipboardCopyObj::recalcImages()
 {   
     if(images.empty()) 
         return;
-    dfCopyPastePng png;
+    DwarfClipboardPng png;
     images = png.ImagesFromString(images.at(0).text("rawNumbers"));
 }
-QList<QImage> dfCopyObj::imageListFromTiledImages(const QImage &image)
+QList<QImage> DwarfClipboardCopyObj::imageListFromTiledImages(const QImage &image)
 {
     QList<QImage> retList;
     QStringList dimensions;      
@@ -63,7 +63,7 @@ QList<QImage> dfCopyObj::imageListFromTiledImages(const QImage &image)
     }
     return retList;
 }
-QImage dfCopyObj::getImage(int z) const
+QImage DwarfClipboardCopyObj::getImage(int z) const
 { 
     if(z == -1)
     { 
@@ -82,7 +82,7 @@ QImage dfCopyObj::getImage(int z) const
         return images.at(z); 
     } 
 }
-QImage dfCopyObj::getTiledImages() const
+QImage DwarfClipboardCopyObj::getTiledImages() const
 {
     if(originalImages.empty())
     {
@@ -101,11 +101,11 @@ QImage dfCopyObj::getTiledImages() const
     paint.end();
     return result;
 }
-dfCopyObj::~dfCopyObj()
+DwarfClipboardCopyObj::~DwarfClipboardCopyObj()
 {
 	qDeleteAll(childItems);
 }
-void dfCopyObj::setOriginalState(int state)
+void DwarfClipboardCopyObj::setOriginalState(int state)
 { 
 	if(state)
 	{
@@ -116,50 +116,50 @@ void dfCopyObj::setOriginalState(int state)
 		useOriginal = false;
 	}
 }
-void dfCopyObj::appendChild(dfCopyObj *item)
+void DwarfClipboardCopyObj::appendChild(DwarfClipboardCopyObj *item)
 {
 	childItems.append(item);
 }
-void dfCopyObj::prependChild(dfCopyObj *item)
+void DwarfClipboardCopyObj::prependChild(DwarfClipboardCopyObj *item)
 {
 	childItems.prepend(item);
 }
-void dfCopyObj::insertChild(int position, dfCopyObj *item)
+void DwarfClipboardCopyObj::insertChild(int position, DwarfClipboardCopyObj *item)
 {
 	childItems.insert(position,item);
 }
-void dfCopyObj::removeChildAt(int position)
+void DwarfClipboardCopyObj::removeChildAt(int position)
 {
 	childItems.removeAt(position);
 }
-dfCopyObj* dfCopyObj::child(int row)
+DwarfClipboardCopyObj* DwarfClipboardCopyObj::child(int row)
 {
 	return childItems.value(row);
 }
-int dfCopyObj::childCount() const
+int DwarfClipboardCopyObj::childCount() const
 {
 	return childItems.count();
 }
-int dfCopyObj::row() const
+int DwarfClipboardCopyObj::row() const
 {
 	if(parentItem)
-		return parentItem->childItems.indexOf(const_cast<dfCopyObj*>(this));
+		return parentItem->childItems.indexOf(const_cast<DwarfClipboardCopyObj*>(this));
 	return 0;
 }
-dfCopyObj* dfCopyObj::parent()
+DwarfClipboardCopyObj* DwarfClipboardCopyObj::parent()
 {
 	return parentItem;
 }
-void dfCopyObj::writeImages()
+void DwarfClipboardCopyObj::writeImages()
 {
-    dfCopyPastePng png;
+    DwarfClipboardPng png;
     images = png.getImagesForRange(pos);
     setTextForImages();
 	originalImages = images;
 }
-void dfCopyObj::setTextForImages()
+void DwarfClipboardCopyObj::setTextForImages()
 {    
-    dfCopyPastePng png;
+    DwarfClipboardPng png;
     for(int itr = 0;itr < images.size();itr++)
     {
         images[itr].setText("dig",png.stringFrom3dVector(dig));
@@ -169,21 +169,21 @@ void dfCopyObj::setTextForImages()
     }
 }
         
-void dfCopyObj::setName(QString n)
+void DwarfClipboardCopyObj::setName(QString n)
 {
     Name = n;
     for(int itr = 0;itr < images.size();itr++){
         images[itr].setText("name",Name);
     }
 }
-void dfCopyObj::setComment(QString c)
+void DwarfClipboardCopyObj::setComment(QString c)
 {
     Comment = c;
     for(int itr = 0;itr < images.size();itr++){
         images[itr].setText("comment",Comment);
     }
 }
-void dfCopyObj::getDataFromDF()
+void DwarfClipboardCopyObj::getDataFromDF()
 {
     Maps = DF->getMaps();
     Maps->Start();
@@ -210,7 +210,7 @@ void dfCopyObj::getDataFromDF()
         }
     }
 }
-void dfCopyObj::checkDig(int32_t tileType, cursorIdx current, cursorIdx begin)
+void DwarfClipboardCopyObj::checkDig(int32_t tileType, cursorIdx current, cursorIdx begin)
 {
     if(tileType < 0 || tileType > 519)return;
     if(DFHack::isOpenTerrain(tileType) || DFHack::isFloorTerrain(tileType)) {dig[begin.z - current.z][current.y - begin.y][current.x - begin.x] = "d";} 
@@ -221,7 +221,7 @@ void dfCopyObj::checkDig(int32_t tileType, cursorIdx current, cursorIdx begin)
    // else if(DFHack::isWallTerrain(tileType)){build [begin.z - current.z][current.y - begin.y][current.x - begin.x] = "u" ;}
     //build [currentPos.z - pos[0].z][currentPos.y - pos[0].y][currentPos.x - pos[0].x] = "w";}
 }
-void dfCopyObj::pasteDesignations(cursorIdx location)
+void DwarfClipboardCopyObj::pasteDesignations(cursorIdx location)
 {
     Maps = DF->getMaps();
     Maps->Start();
@@ -243,9 +243,9 @@ void dfCopyObj::pasteDesignations(cursorIdx location)
         digValue = dig[beginning.z - cur.z][cur.y-beginning.y][cur.x-beginning.x].at(0);
         changeDesignation(designationPtr,digValue,blockPos);
     }
-    lastPaste = location;
+    prevPaste = location;
 }
-void dfCopyObj::pasteBuildings(cursorIdx location)
+void DwarfClipboardCopyObj::pasteBuildings(cursorIdx location)
 {
     DFHack::WindowIO* IO = DF->getWindowIO();
     DFHack::Position* Pos = DF->getPosition();
@@ -263,10 +263,10 @@ void dfCopyObj::pasteBuildings(cursorIdx location)
             }
         }
     }
-    lastPaste = location;
+    //lastPaste = location;
 }
                     
-void dfCopyObj::changeDesignation(DFHack::designations40d *ptr, QChar desig, cursorIdx blockIdx)
+void DwarfClipboardCopyObj::changeDesignation(DFHack::designations40d *ptr, QChar desig, cursorIdx blockIdx)
 {
     switch(desig.toAscii())
     {
@@ -288,7 +288,7 @@ void dfCopyObj::changeDesignation(DFHack::designations40d *ptr, QChar desig, cur
             
     }
 }
-QString dfCopyObj::printDig(QChar sep) const
+QString DwarfClipboardCopyObj::printDig(QChar sep) const
 {
     QString ret;
     for(int z = 0;z < dig.size();z++){
@@ -302,7 +302,7 @@ QString dfCopyObj::printDig(QChar sep) const
     }
     return(ret);
 }
-void dfCopyObj::setupVectors()
+void DwarfClipboardCopyObj::setupVectors()
 {
     dig.clear();
     build.clear();
@@ -322,7 +322,7 @@ void dfCopyObj::setupVectors()
         }
     }
 }
-/*dfCopyObj(const dfCopyObj & oldObj){
+/*DwarfClipboardCopyObj(const DwarfClipboardCopyObj & oldObj){
     DF = oldObj.DF;
     pos = oldObj.pos;
     tile = oldObj.tile;
@@ -330,12 +330,12 @@ void dfCopyObj::setupVectors()
     currentTile = oldObj.currentTile;
     idx = oldObj.idx;
 }*/
-void dfCopyObj::setDF(DFHack::Context *tDF)
+void DwarfClipboardCopyObj::setDF(DFHack::Context *tDF)
 {
     DF = tDF;
 }
 
-void dfCopyObj::addPos(cursorIdx newPos)
+void DwarfClipboardCopyObj::addPos(cursorIdx newPos)
 {
     pos[idx] = newPos;
     idx = (idx+1) % 2;
@@ -345,13 +345,13 @@ void dfCopyObj::addPos(cursorIdx newPos)
         writeImages();
     }
 }
-void dfCopyObj::clear()
+void DwarfClipboardCopyObj::clear()
 {
     pos[0].x = -30000;
     pos[1].x = -30000;
     childItems.clear();
 }
-int dfCopyObj::getValid() const
+int DwarfClipboardCopyObj::getValid() const
 {
     int retVal = 0;
     if(pos[0].x != -30000){
@@ -362,7 +362,11 @@ int dfCopyObj::getValid() const
     }
     return(retVal);
 }
-void dfCopyObj::setBuildCommands(QMap<QString,QString> commands)
+void DwarfClipboardCopyObj::setBuildCommands(QMap<QString,QString> commands)
 {
     buildCommands = commands;
+}
+cursorIdx DwarfClipboardCopyObj::getPrevPastePoint()
+{
+    return prevPaste;
 }

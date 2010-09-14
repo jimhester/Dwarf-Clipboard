@@ -1,15 +1,15 @@
-#include "inc\dfCopyPasteTreeView.h"
-#include "inc\dfCopyObj.h"
-#include "inc\dfCopyModel.h"
+#include "inc\DwarfClipboardTreeView.h"
+#include "inc\DwarfClipboardCopyObj.h"
+#include "inc\DwarfClipboardModel.h"
 #include <QMouseEvent>
 
-bool dfCopyPasteTreeView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
+bool DwarfClipboardTreeView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
 {
     if(!index.isValid())
     {
         return QAbstractItemView::edit(index,trigger,event);
     }
-    dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+    DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
     QImage img = item->getImage();
     if(img.isNull())
     {
@@ -32,17 +32,17 @@ bool dfCopyPasteTreeView::edit ( const QModelIndex & index, EditTrigger trigger,
     }
     return QAbstractItemView::edit(index,trigger,event);
 }
-void dfCopyPasteTreeView::mouseDoubleClickEvent(QMouseEvent *event)
+void DwarfClipboardTreeView::mouseDoubleClickEvent(QMouseEvent *event)
 {
     QModelIndex index = indexAt(event->pos());
     if(index.isValid())
     {
         return QAbstractItemView::mouseDoubleClickEvent(event);
     }
-    dfCopyModel *dfModel = static_cast<dfCopyModel*>(model());
-    dfCopyObj *item = new dfCopyObj();
+    DwarfClipboardModel *dfModel = static_cast<DwarfClipboardModel*>(model());
+    DwarfClipboardCopyObj *item = new DwarfClipboardCopyObj();
     item->setName("New Category");
     dfModel->appendData(item);
     resizeColumnToContents(0);
-//    dfCopyPasteTreeView::edit(idx2,QAbstractItemView::DoubleClicked,event);
+//    DwarfClipboardTreeView::edit(idx2,QAbstractItemView::DoubleClicked,event);
 }

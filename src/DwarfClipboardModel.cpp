@@ -1,4 +1,4 @@
-#include "inc\dfCopyModel.h"
+#include "inc\DwarfClipboardModel.h"
 #include <QAbstractItemView>
 #include <QAbstractListModel>
 #include <QVariant>
@@ -8,68 +8,68 @@
 #include <QBuffer>
 #include <QUrl>
 
-dfCopyModel::dfCopyModel(DFHack::Context * tDF,QObject *parent)
+DwarfClipboardModel::DwarfClipboardModel(DFHack::Context * tDF,QObject *parent)
 : DF(tDF),QAbstractItemModel(parent){
-	rootItem = new dfCopyObj();
+	rootItem = new DwarfClipboardCopyObj();
 }
-dfCopyModel::~dfCopyModel()
+DwarfClipboardModel::~DwarfClipboardModel()
 {
 	delete rootItem;
 }
-QModelIndex dfCopyModel::index(int row, int column,const QModelIndex &parent) const
+QModelIndex DwarfClipboardModel::index(int row, int column,const QModelIndex &parent) const
 {
 	if (!hasIndex(row, column, parent))
 		return QModelIndex();
 
-	dfCopyObj *parentItem;
+	DwarfClipboardCopyObj *parentItem;
 
 	if (!parent.isValid())
 		parentItem = rootItem;
 	else
-		parentItem = static_cast<dfCopyObj*>(parent.internalPointer());
+		parentItem = static_cast<DwarfClipboardCopyObj*>(parent.internalPointer());
 
-	dfCopyObj *childItem = parentItem->child(row);
+	DwarfClipboardCopyObj *childItem = parentItem->child(row);
 	if (childItem)
 		return createIndex(row, column, childItem);
 	else
 		return QModelIndex();
 }
-QModelIndex dfCopyModel::parent(const QModelIndex &index) const
+QModelIndex DwarfClipboardModel::parent(const QModelIndex &index) const
  {
      if (!index.isValid())
          return QModelIndex();
 
-     dfCopyObj *childItem = static_cast<dfCopyObj*>(index.internalPointer());
-     dfCopyObj *parentItem = childItem->parent();
+     DwarfClipboardCopyObj *childItem = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
+     DwarfClipboardCopyObj *parentItem = childItem->parent();
 
      if (parentItem == rootItem)
          return QModelIndex();
 
      return createIndex(parentItem->row(), 0, parentItem);
  }
-int dfCopyModel::rowCount(const QModelIndex &parent) const
+int DwarfClipboardModel::rowCount(const QModelIndex &parent) const
 {
- dfCopyObj *parentItem;
+ DwarfClipboardCopyObj *parentItem;
  if (parent.column() > 0)
      return 0;
 
  if (!parent.isValid())
      parentItem = rootItem;
  else
-     parentItem = static_cast<dfCopyObj*>(parent.internalPointer());
+     parentItem = static_cast<DwarfClipboardCopyObj*>(parent.internalPointer());
 
  return parentItem->childCount();
 }
-int dfCopyModel::columnCount(const QModelIndex &parent) const
+int DwarfClipboardModel::columnCount(const QModelIndex &parent) const
 {
     return 3;
 }
-QVariant dfCopyModel::data(const QModelIndex &index, int role) const
+QVariant DwarfClipboardModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
          return QVariant();
 
-    dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+    DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
     if(item->getImage().isNull()){
         if(index.column() == 0 && (role == Qt::DisplayRole || role == Qt::EditRole))
         {
@@ -89,7 +89,7 @@ QVariant dfCopyModel::data(const QModelIndex &index, int role) const
             return item->getComment();
     return QVariant();
 }
-QVariant dfCopyModel::headerData(int section, Qt::Orientation orientation,int role) const
+QVariant DwarfClipboardModel::headerData(int section, Qt::Orientation orientation,int role) const
 {
     if (role != Qt::DisplayRole)
          return QVariant();
@@ -104,13 +104,13 @@ QVariant dfCopyModel::headerData(int section, Qt::Orientation orientation,int ro
     }
     return(QVariant());
 }
-Qt::ItemFlags dfCopyModel::flags(const QModelIndex &index) const
+Qt::ItemFlags DwarfClipboardModel::flags(const QModelIndex &index) const
  {
 
      Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
      if (!index.isValid())
          return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled;
-	 dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+	 DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
 	 if(item->getImage().isNull()){
          return defaultFlags | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	 }
@@ -119,11 +119,11 @@ Qt::ItemFlags dfCopyModel::flags(const QModelIndex &index) const
      }
 	 return defaultFlags;
  }
-bool dfCopyModel::setData(const QModelIndex &index,const QVariant &value, int role)
+bool DwarfClipboardModel::setData(const QModelIndex &index,const QVariant &value, int role)
  {
      if (index.isValid() && role == Qt::EditRole) 
 {
-		dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+		DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
         if(item->getImage().isNull()){
             if(index.column() == 0){
                 item->setName(value.toString());
@@ -144,7 +144,7 @@ bool dfCopyModel::setData(const QModelIndex &index,const QVariant &value, int ro
      }
      return false;
  }
-QStringList dfCopyModel::mimeTypes() const
+QStringList DwarfClipboardModel::mimeTypes() const
  {
   //   return QAbstractItemModel::mimeTypes();
      QStringList types;
@@ -152,7 +152,7 @@ QStringList dfCopyModel::mimeTypes() const
      return types;
  }
 
-QMimeData *dfCopyModel::mimeData(const QModelIndexList &indexes) const
+QMimeData *DwarfClipboardModel::mimeData(const QModelIndexList &indexes) const
  {
 //     return QAbstractItemModel::mimeData(indexes);
      QMimeData *mimeData = new QMimeData();
@@ -165,7 +165,7 @@ QMimeData *dfCopyModel::mimeData(const QModelIndexList &indexes) const
      QDataStream out(&buffer2);
      foreach (QModelIndex index, indexes) {
          if (index.isValid()) {
-			 dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+			 DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
             QImage img = item->getImage();
             if(!img.isNull()){
                 img.save(&buffer,"PNG");
@@ -179,19 +179,19 @@ QMimeData *dfCopyModel::mimeData(const QModelIndexList &indexes) const
      mimeData->setData("pointer",encodedData2);
      return mimeData;
  }
-bool dfCopyModel::dropMimeData(const QMimeData *data,
+bool DwarfClipboardModel::dropMimeData(const QMimeData *data,
      Qt::DropAction action, int row, int column, const QModelIndex &parent)
  {
   //   return QAbstractItemModel::dropMimeData(data,action,row,column,parent);
      if (action == Qt::IgnoreAction)
          return true;
-     dfCopyObj *parentItem;
+     DwarfClipboardCopyObj *parentItem;
      if(!parent.isValid()){
          parentItem = rootItem;
      }
      else
      {
-        parentItem = static_cast<dfCopyObj*>(parent.internalPointer());
+        parentItem = static_cast<DwarfClipboardCopyObj*>(parent.internalPointer());
      }
 	 int insertPt;
 	 if(row == -1){
@@ -208,14 +208,16 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
         QDataStream in(&buffer);
         while(!in.atEnd())
         {
-            dfCopyObj *item;
+            DwarfClipboardCopyObj *item;
             in.readRawData((char *)&item,sizeof(item));
-            QModelIndex index = createIndex(item->row(),0,item->parent());
-            beginMoveRows(index,item->row(),item->row(),parent,insertPt);
-            item->parent()->removeChildAt(item->row());
-            item->setParent(parentItem);
-            parentItem->insertChild(insertPt,item);
-            endMoveRows();
+            //if(!((item->parent() == parentItem && item->row() != row))){
+                QModelIndex index = createIndex(0,0,item->parent());
+                beginMoveRows(index,item->row(),item->row(),parent,insertPt);
+                item->parent()->removeChildAt(item->row());
+                item->setParent(parentItem);
+                parentItem->insertChild(insertPt,item);
+                endMoveRows();
+        //    }
         }
         buffer.close();
         //insertDataAtPoint(item,insertPt,parentItem);
@@ -228,7 +230,7 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
          buffer.open(QIODevice::ReadOnly);
          QImage img;
          img.load(&buffer,"PNG");
-		 dfCopyObj* newObj = new dfCopyObj(img);
+		 DwarfClipboardCopyObj* newObj = new DwarfClipboardCopyObj(img);
          insertDataAtPoint(newObj,insertPt,parent);
 //             prependData(newObj);
          return true;
@@ -242,7 +244,7 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
 {
                 QImage img;
                  img.load(file,"PNG");
-		         dfCopyObj * newObj = new dfCopyObj(img);
+		         DwarfClipboardCopyObj * newObj = new DwarfClipboardCopyObj(img);
                  insertDataAtPoint(newObj,insertPt,parent);
             }
          }
@@ -250,14 +252,14 @@ bool dfCopyModel::dropMimeData(const QMimeData *data,
      }
      return false;
 }
-bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &parent)
+bool DwarfClipboardModel::insertDataAtPoint(DwarfClipboardCopyObj *data,int row, const QModelIndex &parent)
 {
-    dfCopyObj* parentItem;
+    DwarfClipboardCopyObj* parentItem;
     if(!parent.isValid()){
         parentItem = rootItem;
     }
     else{
-        parentItem = static_cast<dfCopyObj*>(parent.internalPointer());
+        parentItem = static_cast<DwarfClipboardCopyObj*>(parent.internalPointer());
     }
     beginInsertRows(parent,row,row);
     parentItem->insertChild(row,data);
@@ -265,7 +267,7 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &
     endInsertRows();
     return true;
 }
- bool dfCopyModel::prependData(dfCopyObj *data, dfCopyObj *parent)
+ bool DwarfClipboardModel::prependData(DwarfClipboardCopyObj *data, DwarfClipboardCopyObj *parent)
  {
      if(parent == NULL){
          parent = rootItem;
@@ -276,16 +278,16 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &
      endInsertRows();
      return true;
  }
- void dfCopyModel::clear()
+ void DwarfClipboardModel::clear()
 {
     for (int i = 0; i < rootItem->childCount(); ++i) {
-        dfCopyObj* item = rootItem->child(i);
+        DwarfClipboardCopyObj* item = rootItem->child(i);
         delete item;
     }
     rootItem->clear();
     reset();
 }
- bool dfCopyModel::appendData(dfCopyObj *data, dfCopyObj *parent)
+ bool DwarfClipboardModel::appendData(DwarfClipboardCopyObj *data, DwarfClipboardCopyObj *parent)
  {
      if(parent == NULL){
          parent = rootItem;
@@ -296,19 +298,19 @@ bool dfCopyModel::insertDataAtPoint(dfCopyObj *data,int row, const QModelIndex &
      endInsertRows();
      return true;
  }
-bool dfCopyModel::removeRows ( int row, int count, const QModelIndex & parent ) 
+bool DwarfClipboardModel::removeRows ( int row, int count, const QModelIndex & parent ) 
 {
-    dfCopyObj* parentItem;
+    DwarfClipboardCopyObj* parentItem;
     if(!parent.isValid()){
         parentItem = rootItem;
     }
     else{
-        parentItem= static_cast<dfCopyObj*>(parent.internalPointer());
+        parentItem= static_cast<DwarfClipboardCopyObj*>(parent.internalPointer());
     }
     
     beginRemoveRows(parent, row, row+count-1); 
     for (int itr = 0; itr < count; ++itr) {
-        //dfCopyObj* childItem = parentItem->child(row);
+        //DwarfClipboardCopyObj* childItem = parentItem->child(row);
         parentItem->removeChildAt(row);
         //delete childItem;
     }

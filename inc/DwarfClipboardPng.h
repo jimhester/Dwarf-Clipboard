@@ -6,15 +6,15 @@
 #include <QImage>
 #include <QMap>
 
-class dfCopyObj;
+class DwarfClipboardCopyObj;
 
-class dfCopyPastePng
+class DwarfClipboardPng
 {
 public:
-    dfCopyPastePng();
+    DwarfClipboardPng();
     QImage getTileSet(){ return *tileSet; };
     QList<QImage> getImagesForRange(QList<cursorIdx> range);
-    QList<QImage> regenerateImages(dfCopyObj& obj);
+    QList<QImage> regenerateImages(DwarfClipboardCopyObj& obj);
     QVector<QVector<QVector<QString > > > digFromString(QString str);
     QString stringFrom3dVector(const QVector<QVector<QVector<QString> > > &vec);
     QVector<QVector<QVector<QString> > > ThreeDVectorFromString(QString str);

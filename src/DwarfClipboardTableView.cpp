@@ -1,13 +1,13 @@
-#include "inc\dfCopyPasteTableView.h"
-#include "inc\dfCopyObj.h"
+#include "inc\DwarfClipboardTableView.h"
+#include "inc\DwarfClipboardCopyObj.h"
 
-bool dfCopyPasteTableView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
+bool DwarfClipboardTableView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
 {
     if(!index.isValid()){
         return QAbstractItemView::edit(index,trigger,event);
     }
     if(index.column() == 0 && trigger & editTriggers()){
-        dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+        DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
         QImage img = item->getImage();
         editWin->setCopyObj(item);
         editWin->show();
@@ -15,7 +15,7 @@ bool dfCopyPasteTableView::edit ( const QModelIndex & index, EditTrigger trigger
     }
     else{
         if(editWin->isVisible()){
-            dfCopyObj *item = static_cast<dfCopyObj*>(index.internalPointer());
+            DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
             QImage img = item->getImage();
        		editWin->setCopyObj(item);
             editWin->show();

@@ -1,8 +1,8 @@
-#include "inc/dfCopyPasteEditWidget.h"
-#include "inc/dfCopyObj.h"
+#include "inc/DwarfClipboardEditWidget.h"
+#include "inc/DwarfClipboardCopyObj.h"
 #include <QDebug>
 
-dfCopyPasteEditWidget::dfCopyPasteEditWidget(QWidget *parent) : QWidget(parent)
+DwarfClipboardEditWidget::DwarfClipboardEditWidget(QWidget *parent) : QWidget(parent)
 {
 	setupUi(this);
     scene = new QGraphicsScene();
@@ -11,7 +11,7 @@ dfCopyPasteEditWidget::dfCopyPasteEditWidget(QWidget *parent) : QWidget(parent)
     horizontalLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 	connect(verticalSlider,SIGNAL(valueChanged(int)),this,SLOT(updateImage(int)));
 }
-void dfCopyPasteEditWidget::setCopyObj(dfCopyObj * newObj)
+void DwarfClipboardEditWidget::setCopyObj(DwarfClipboardCopyObj * newObj)
 {
 	obj = newObj;
     scene->clear();
@@ -23,7 +23,7 @@ void dfCopyPasteEditWidget::setCopyObj(dfCopyObj * newObj)
     verticalSlider->setValue(obj->getImageCount()-obj->getDefaultIndex()-1);
     setWindowTitle(obj->getName());
 }
-void dfCopyPasteEditWidget::updateImage(int position)
+void DwarfClipboardEditWidget::updateImage(int position)
 {
     QImage img = obj->getImage(obj->getImageCount()-position-1);
     scene->setSceneRect(QRect(QPoint(0,0),img.size()));
