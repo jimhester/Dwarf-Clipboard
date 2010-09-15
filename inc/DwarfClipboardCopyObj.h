@@ -38,6 +38,8 @@ private:
 	QList<QImage> originalImages;
     static QMap<QString,QString>buildCommands;
     cursorIdx prevPaste;
+    void moveToPoint(int x, int y,int z);
+    void moveToPoint(cursorIdx location);
 public:
     DwarfClipboardCopyObj(DwarfClipboardCopyObj *parent = 0);
     DwarfClipboardCopyObj(cursorIdx c1, cursorIdx c2,DwarfClipboardCopyObj *parent = 0);

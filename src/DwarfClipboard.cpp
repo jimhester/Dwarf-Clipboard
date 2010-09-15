@@ -87,6 +87,7 @@ DwarfClipboard::DwarfClipboard()
     QPixmap generated = QApplication::style()->generatedIconPixmap(QIcon::Disabled, disconnectedIcon, &opt);
     disconnectedIcon = generated;
     loadDirectory();
+    loadBuildCommands();
     if(connected){
         connected = false; //this is ugly, but just ensures everything will be set proprly
         setConnected();
@@ -106,15 +107,16 @@ void DwarfClipboard::heartbeat()
             DF = DFMgr->getSingleContext();
         }
         catch(std::exception& e){};
-        setDisconnected();
-        return;
-    }
-
-    try{
-         result = DF->getMaps()->Start();
-    }
-    catch (std::exception& e){
         result = false;
+    }
+    else{
+
+        try{
+            result = DF->getMaps()->Start();
+        }
+        catch (std::exception& e){
+            result = false;
+        }
     }
 
     if(!result){

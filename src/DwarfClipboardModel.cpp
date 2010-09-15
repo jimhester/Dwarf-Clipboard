@@ -107,7 +107,7 @@ QVariant DwarfClipboardModel::headerData(int section, Qt::Orientation orientatio
 Qt::ItemFlags DwarfClipboardModel::flags(const QModelIndex &index) const
  {
 
-     Qt::ItemFlags defaultFlags = QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+     Qt::ItemFlags defaultFlags = Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
      if (!index.isValid())
          return Qt::ItemIsEnabled | Qt::ItemIsDropEnabled;
 	 DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(index.internalPointer());
@@ -182,7 +182,6 @@ QMimeData *DwarfClipboardModel::mimeData(const QModelIndexList &indexes) const
 bool DwarfClipboardModel::dropMimeData(const QMimeData *data,
      Qt::DropAction action, int row, int column, const QModelIndex &parent)
  {
-  //   return QAbstractItemModel::dropMimeData(data,action,row,column,parent);
      if (action == Qt::IgnoreAction)
          return true;
      DwarfClipboardCopyObj *parentItem;
@@ -211,12 +210,13 @@ bool DwarfClipboardModel::dropMimeData(const QMimeData *data,
             DwarfClipboardCopyObj *item;
             in.readRawData((char *)&item,sizeof(item));
             //if(!((item->parent() == parentItem && item->row() != row))){
-                QModelIndex index = createIndex(0,0,item->parent());
-                beginMoveRows(index,item->row(),item->row(),parent,insertPt);
+            QModelIndex index = createIndex(item->parent()->row(),0,item->parent());
+            if(beginMoveRows(index,item->row(),item->row(),parent,insertPt)){
                 item->parent()->removeChildAt(item->row());
                 item->setParent(parentItem);
                 parentItem->insertChild(insertPt,item);
                 endMoveRows();
+            }
         //    }
         }
         buffer.close();

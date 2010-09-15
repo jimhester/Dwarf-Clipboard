@@ -1,7 +1,7 @@
 #include "inc\DwarfClipboardCopyObj.h"
 #include "inc\common.h"
 #include <QPainter>
-
+#include <QDebug>
 bool DwarfClipboardCopyObj::useOriginal = false;
 DFHack::Context* DwarfClipboardCopyObj::DF=0;
 QMap<QString,QString> DwarfClipboardCopyObj::buildCommands= QMap<QString,QString>();
@@ -59,6 +59,10 @@ QList<QImage> DwarfClipboardCopyObj::imageListFromTiledImages(const QImage &imag
     for(int zIdx = 0;zIdx < dimensions[2].toInt();++zIdx)
     {
         QImage test = image.copy(QRect(0,dimensions[1].toInt()*tileHeight*zIdx,tileWidth*dimensions[0].toInt(),tileHeight*dimensions[1].toInt()));
+        QString key;
+        foreach(key,image.textKeys()){
+            test.setText(key,image.text(key));
+        }
         retList.append(test);
     }
     return retList;
@@ -126,6 +130,9 @@ void DwarfClipboardCopyObj::prependChild(DwarfClipboardCopyObj *item)
 }
 void DwarfClipboardCopyObj::insertChild(int position, DwarfClipboardCopyObj *item)
 {
+    //if(position > childItems.size()){
+    //    childItems.append(item);
+    //}
 	childItems.insert(position,item);
 }
 void DwarfClipboardCopyObj::removeChildAt(int position)
@@ -188,10 +195,11 @@ void DwarfClipboardCopyObj::getDataFromDF()
     Maps = DF->getMaps();
     Maps->Start();
     dfLocationIterator itr(pos[0],pos[1],Maps);
-    cursorIdx beginning = itr.begin();
-    checkDig(itr.getCurrentTileType(),itr.getCurrentPosition(),beginning);
+    cursorIdx end = itr.end();
+    cursorIdx begin = itr.begin();
+    checkDig(itr.getCurrentTileType(),itr.getCurrentPosition(),begin);
     while(itr.next()){
-        checkDig(itr.getCurrentTileType(),itr.getCurrentPosition(),beginning);
+        checkDig(itr.getCurrentTileType(),itr.getCurrentPosition(),begin);
     }
     DFHack::Buildings * Bld = DF->getBuildings();
     DFHack::VersionInfo* mem = DF->getMemoryInfo();
@@ -203,8 +211,9 @@ void DwarfClipboardCopyObj::getDataFromDF()
             if(temp.type != 0xFFFFFFFF){
                 std::string typestr;
                 mem->resolveClassIDToClassname(temp.type, typestr);
-                if(temp.z >= pos[1].z && temp.z <= pos[0].z && temp.x1 >= pos[0].x && temp.x2 <= pos[1].x && temp.y1 >= pos[0].y && temp.y2 <= pos[1].y){
-                    build[pos[0].z - temp.z][temp.y1-pos[0].y][temp.x1-pos[0].x] = buildCommands[QString(typestr.c_str())];
+                if(temp.z >= end.z && temp.z <= begin.z && temp.x1 >= begin.x && temp.x2 <= end.x && temp.y1 >= begin.y && temp.y2 <= end.y){
+                    build[begin.z - temp.z][temp.y1-begin.y][temp.x1-begin.x] = buildCommands[QString(typestr.c_str())];
+                    qDebug() << buildCommands[QString(typestr.c_str())];
                 }
             }
         }
@@ -248,22 +257,62 @@ void DwarfClipboardCopyObj::pasteDesignations(cursorIdx location)
 void DwarfClipboardCopyObj::pasteBuildings(cursorIdx location)
 {
     DFHack::WindowIO* IO = DF->getWindowIO();
-    DFHack::Position* Pos = DF->getPosition();
-    IO->TypeSpecial(DFHack::ESCAPE);
-    IO->TypeStr("b"); // enter build menu
+    //DFHack::Position* Pos = DF->getPosition();
+    IO->TypeSpecial(DFHack::ESCAPE,1,100);
+    IO->TypeStr("b",100); // enter build menu
 
     for(int z = 0;z < build.size();z++){
         for(int y = 0;y < build[z].size();y++){
             for(int x = 0;x < build[z][y].size();x++){
                 if(build[z][y][x] != ""){
                     IO->TypeStr(build[z][y][x].toLatin1());
-                    Pos->setCursorCoords(location.x+x,location.y+y,location.z-z);
+                    cursorIdx temp;
+//                    Pos->getCursorCoords(temp.x,temp.y,temp.z);
+                    moveToPoint(location.x+x,location.y+y,location.z-z);
                     IO->TypeSpecial(DFHack::ENTER,2);
                 }
             }
         }
     }
+    IO->TypeSpecial(DFHack::ESCAPE);
     //lastPaste = location;
+//    moveToPoint(location.x+5,location.y,location.z);
+}
+void DwarfClipboardCopyObj::moveToPoint(int x, int y,int z)
+{
+    cursorIdx newLoc;
+    newLoc.x = x;
+    newLoc.y = y;
+    newLoc.z = z;
+    moveToPoint(newLoc);
+}
+
+void DwarfClipboardCopyObj::moveToPoint(cursorIdx location)
+{
+    DFHack::WindowIO* IO = DF->getWindowIO();
+    DFHack::Position* Pos = DF->getPosition();
+    cursorIdx temp;
+    Pos->getCursorCoords(temp.x,temp.y,temp.z);
+    if(temp.x == -30000)
+        return;
+    if(location.x-temp.x < 0){
+        IO->TypeSpecial(DFHack::LEFT,temp.x-location.x);
+    }
+    if(location.x-temp.x > 0){
+        IO->TypeSpecial(DFHack::RIGHT,location.x-temp.x);
+    }
+    if(location.y-temp.y < 0){
+        IO->TypeSpecial(DFHack::UP,temp.y-location.y);
+    }
+    if(location.y-temp.y > 0){
+        IO->TypeSpecial(DFHack::DOWN,location.y-temp.y);
+    }
+    if(location.z-temp.z < 0){
+        IO->TypeStr(">",temp.z-location.z);
+    }
+    if(location.z-temp.z > 0){
+        IO->TypeStr("<",location.z-temp.z);
+    }
 }
                     
 void DwarfClipboardCopyObj::changeDesignation(DFHack::designations40d *ptr, QChar desig, cursorIdx blockIdx)
