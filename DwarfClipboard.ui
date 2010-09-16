@@ -62,7 +62,7 @@
        <item>
         <widget class="QPushButton" name="pushButtonRecentLoad">
          <property name="toolTip">
-          <string>Load Selected Layout To File</string>
+          <string>Load selected layout to file</string>
          </property>
          <property name="text">
           <string>Load</string>
@@ -72,7 +72,7 @@
        <item>
         <widget class="QPushButton" name="pushButtonRecentSave">
          <property name="toolTip">
-          <string>Save Selected Layout to File</string>
+          <string>Save selected layout to file</string>
          </property>
          <property name="text">
           <string>Save</string>
@@ -82,7 +82,7 @@
        <item>
         <widget class="QPushButton" name="pushButtonToLibrary">
          <property name="toolTip">
-          <string>Add Selected Layout to File</string>
+          <string>Add selected layout to file</string>
          </property>
          <property name="text">
           <string>Add to Library</string>
@@ -104,6 +104,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButtonRecentSetCursorPrev">
+         <property name="toolTip">
+          <string>Sets the cursor to the start of the last paste location</string>
+         </property>
          <property name="text">
           <string>Set Cursor To
 Previous Paste</string>
@@ -113,7 +116,7 @@ Previous Paste</string>
        <item>
         <widget class="QPushButton" name="pushButtonRecentPasteDesignations">
          <property name="toolTip">
-          <string>Paste Selected Layout Designations in DF</string>
+          <string>Paste selected layout designations to DF</string>
          </property>
          <property name="text">
           <string>Paste
@@ -126,6 +129,9 @@ Designations</string>
        </item>
        <item>
         <widget class="QPushButton" name="pushButtonRecentPasteBuildings">
+         <property name="toolTip">
+          <string>Paste selected layout buildings to DF</string>
+         </property>
          <property name="text">
           <string>Paste
 Buildings</string>
@@ -168,7 +174,7 @@ Buildings</string>
        <item>
         <widget class="QPushButton" name="pushButtonLibraryLoad">
          <property name="toolTip">
-          <string>Load Layout From File</string>
+          <string>Load selected layout from file</string>
          </property>
          <property name="text">
           <string>Load</string>
@@ -178,7 +184,7 @@ Buildings</string>
        <item>
         <widget class="QPushButton" name="pushButtonLibrarySaveSelected">
          <property name="toolTip">
-          <string>Save Selected Layout To File</string>
+          <string>Save selected layout to file</string>
          </property>
          <property name="text">
           <string>Save</string>
@@ -188,7 +194,7 @@ Buildings</string>
        <item>
         <widget class="QPushButton" name="pushButtonLibraryReload">
          <property name="toolTip">
-          <string>Reload Library From Disk</string>
+          <string>Reload library from disk</string>
          </property>
          <property name="text">
           <string>Reload Library</string>
@@ -198,7 +204,7 @@ Buildings</string>
        <item>
         <widget class="QPushButton" name="pushButtonLibrarySave">
          <property name="toolTip">
-          <string>Save Library To Disk</string>
+          <string>Save library to disk</string>
          </property>
          <property name="text">
           <string>Save Library</string>
@@ -220,6 +226,9 @@ Buildings</string>
        </item>
        <item>
         <widget class="QPushButton" name="pushButtonLibrarySetCursorPrev">
+         <property name="toolTip">
+          <string>Sets the cursor to the start of the last paste location</string>
+         </property>
          <property name="text">
           <string>Set Cursor To
 Previous Paste</string>
@@ -229,7 +238,7 @@ Previous Paste</string>
        <item>
         <widget class="QPushButton" name="pushButtonLibraryPasteDesignations">
          <property name="toolTip">
-          <string>Paste Selected Layout Designations to DF</string>
+          <string>Paste selected layout designations to DF</string>
          </property>
          <property name="text">
           <string>Paste
@@ -239,6 +248,9 @@ Designations</string>
        </item>
        <item>
         <widget class="QPushButton" name="pushButtonLibraryPasteBuildings">
+         <property name="toolTip">
+          <string>Paste selected layout buildings to DF</string>
+         </property>
          <property name="text">
           <string>Paste
 Buildings</string>
@@ -277,7 +289,7 @@ Buildings</string>
         </font>
        </property>
        <property name="toolTip">
-        <string>Set Shortcut To Copy From DF</string>
+        <string>Set shortcut to copy from DF</string>
        </property>
        <property name="text">
         <string>Ctrl-Alt-C</string>
@@ -307,7 +319,7 @@ Buildings</string>
         </font>
        </property>
        <property name="toolTip">
-        <string>Set  Shortcut to Paste To DF</string>
+        <string>Set  shortcut to paste designations to DF</string>
        </property>
        <property name="text">
         <string>Ctrl-Alt-D</string>
@@ -337,7 +349,7 @@ Buildings</string>
         </font>
        </property>
        <property name="toolTip">
-        <string>Set Thumbnail Size</string>
+        <string>Set thumbnail size</string>
        </property>
        <property name="text">
         <string/>
@@ -364,7 +376,7 @@ Buildings</string>
         </font>
        </property>
        <property name="toolTip">
-        <string>Set Input Delay, higher is longer</string>
+        <string>Set input delay, higher is longer</string>
        </property>
        <property name="text">
         <string/>
@@ -388,7 +400,7 @@ Buildings</string>
        <item>
         <widget class="QPushButton" name="tilesetPathButton">
          <property name="toolTip">
-          <string>Select Current Tileset</string>
+          <string>Select current tileset</string>
          </property>
          <property name="text">
           <string>C:/DF/16x16.png</string>
@@ -401,7 +413,7 @@ Buildings</string>
        <item>
         <widget class="QToolButton" name="tilesetPathToolButton">
          <property name="toolTip">
-          <string>Read Current Tileset From DF</string>
+          <string>Read current tileset from DF</string>
          </property>
          <property name="text">
           <string/>
@@ -431,7 +443,7 @@ Buildings</string>
        <item>
         <widget class="QPushButton" name="colorPathButton">
          <property name="toolTip">
-          <string>Select Color File</string>
+          <string>Select color file</string>
          </property>
          <property name="text">
           <string>C:/DF/colors.png</string>
@@ -444,7 +456,7 @@ Buildings</string>
        <item>
         <widget class="QToolButton" name="colorPathToolButton">
          <property name="toolTip">
-          <string>Read Current Color From DF</string>
+          <string>Read current color from DF</string>
          </property>
          <property name="text">
           <string/>
@@ -476,6 +488,9 @@ Buildings</string>
          <pointsize>12</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>check to use the original tileset when copied, uncheck to use the current tileset</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
@@ -503,6 +518,9 @@ Buildings</string>
          <pointsize>12</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>Set shortcut to move the cursor to the start of the last paste location</string>
+       </property>
        <property name="text">
         <string>Ctrl-Alt-P</string>
        </property>
@@ -529,6 +547,9 @@ Buildings</string>
         <font>
          <pointsize>12</pointsize>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>Set  shortcut to paste buildings to DF</string>
        </property>
        <property name="text">
         <string>Ctrl-Alt-B</string>

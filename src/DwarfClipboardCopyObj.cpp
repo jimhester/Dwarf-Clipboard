@@ -46,10 +46,10 @@ DwarfClipboardCopyObj::DwarfClipboardCopyObj(QImage img,DwarfClipboardCopyObj *p
 }
 void DwarfClipboardCopyObj::recalcImages()
 {   
-    if(images.empty()) 
-        return;
+    //if(images.empty()) 
+    //    return;
     DwarfClipboardPng png;
-    images = png.ImagesFromString(images.at(0).text("rawNumbers"));
+    images = png.ImagesFromString(originalImages.at(0).text("rawNumbers"));
 }
 QList<QImage> DwarfClipboardCopyObj::imageListFromTiledImages(const QImage &image)
 {

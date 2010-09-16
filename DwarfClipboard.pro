@@ -8,8 +8,10 @@ FORMS += DwarfClipboard.ui editWidget.ui
 
 CONFIG += qt
 CONFIG  += qxt
+CONFIG += debug
 QXT += core gui globalshortcut
-LIBS += dfhack-debug.lib
 
-CONFIG += debug_and_release
+LIBS+=dfhack-debug.lib
 
+
+RC_FILE = DwarfClipboard.rc

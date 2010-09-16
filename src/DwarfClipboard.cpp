@@ -260,7 +260,16 @@ void DwarfClipboard::saveLibrary(QDir current, DwarfClipboardCopyObj* parent)
         }
         else{
             QImage img = child->getTiledImages();
-            img.save(current.absolutePath() +"/"+ child->getName() + ".png");
+            if(QFile::exists(current.absolutePath() +"/"+ child->getName() + ".png")){
+                int i = 1;
+                while(QFile::exists(current.absolutePath() +"/"+ child->getName() + i + ".png")){
+                    i++;
+                }
+                img.save(current.absolutePath() +"/"+ child->getName() +i + ".png");
+            }
+            else{
+                img.save(current.absolutePath() +"/"+ child->getName() + ".png");
+            }
         }
     }
 }         
@@ -621,6 +630,7 @@ void DwarfClipboard::copy()
     if(!connected)
         return;
     cursorIdx tempCursor;
+    TabWidget->setTabEnabled(0,true);
     if(prevCursor.x == -30000){
         if(!Pos->getCursorCoords(tempCursor.x,tempCursor.y,tempCursor.z)){
             trayIcon->showMessage(tr("df Copy"),tr("Please place the df cursor"));
@@ -814,6 +824,7 @@ void DwarfClipboard::loadBuildCommands()
     
 void DwarfClipboard::saveAndQuit()
 {
+    saveLibrary();
     QFile outFile("config.ini");
     outFile.open(QIODevice::WriteOnly);
     QTextStream out(&outFile);

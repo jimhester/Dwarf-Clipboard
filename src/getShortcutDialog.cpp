@@ -3,6 +3,7 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QBoxLayout>
+#include <QCursor>
 
 getShortcutDialog::getShortcutDialog(QWidget* parent) : QDialog(parent)
 {
@@ -18,6 +19,7 @@ getShortcutDialog::getShortcutDialog(QWidget* parent) : QDialog(parent)
 QKeySequence getShortcutDialog::getKeySequence(QWidget *parent)
 {
 	getShortcutDialog dialog(parent);
+    dialog.move(QCursor::pos());
     if (dialog.exec() == QDialog::Accepted) 
 {
         return dialog.getSequence();

@@ -127,7 +127,7 @@ QString DwarfClipboardPng::stringFromScreen(DFHack::t_screen tile)
 }
 QList<QImage> DwarfClipboardPng::ImagesFromString(QString str)
 {
-    if(str.isEmpty()){
+    if(str.isEmpty() || tileSetPath == "" || colorPath == ""){
         return QList<QImage>();
     }
     QStringList zStr,yStr,xStr,screenStr,dimensions;
