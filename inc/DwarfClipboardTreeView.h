@@ -11,8 +11,8 @@ class DwarfClipboardTreeView : public QTreeView
 public:
     DwarfClipboardTreeView( QWidget * parent = 0 ): QTreeView(parent){editWin = new DwarfClipboardEditWidget(this); editWin->hide();};
     bool edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event );
-    void DwarfClipboardTreeView::mouseDoubleClickEvent(QMouseEvent *event);
-
+    void mouseDoubleClickEvent(QMouseEvent *event);
+    void contextMenuEvent ( QContextMenuEvent * event );
 private:
     DwarfClipboardEditWidget * editWin;
 };

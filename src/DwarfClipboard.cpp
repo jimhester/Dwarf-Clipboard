@@ -423,6 +423,7 @@ void DwarfClipboard::inputDelayChanged()
 {
     inputDelay = inputDelayMsLineEdit->text().toInt();
     DwarfClipboardPng::setDelay(inputDelay);
+    DwarfClipboardCopyObj::setDelay(inputDelay);
 }
 void DwarfClipboard::thumbnailSizeChanged()
 {

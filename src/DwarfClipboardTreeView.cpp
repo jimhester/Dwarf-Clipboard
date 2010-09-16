@@ -2,6 +2,8 @@
 #include "inc\DwarfClipboardCopyObj.h"
 #include "inc\DwarfClipboardModel.h"
 #include <QMouseEvent>
+#include <QAction>
+#include <QMenu>
 
 bool DwarfClipboardTreeView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
 {
@@ -45,4 +47,15 @@ void DwarfClipboardTreeView::mouseDoubleClickEvent(QMouseEvent *event)
     dfModel->appendData(item);
     resizeColumnToContents(0);
 //    DwarfClipboardTreeView::edit(idx2,QAbstractItemView::DoubleClicked,event);
+}
+void DwarfClipboardTreeView::contextMenuEvent ( QContextMenuEvent * event ) 
+{
+    QMenu menu(this);
+    QAction * changeTileset = menu.addAction("Set Original Tileset to Current");
+    QAction * result = menu.exec(event->globalPos());
+    if(result == changeTileset){
+        QModelIndex idx = indexAt(event->pos());
+        DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(idx.internalPointer());
+        item->setOrignialToCurrent();
+    }    
 }

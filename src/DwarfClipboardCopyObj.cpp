@@ -2,9 +2,11 @@
 #include "inc\common.h"
 #include <QPainter>
 #include <QDebug>
+
 bool DwarfClipboardCopyObj::useOriginal = false;
 DFHack::Context* DwarfClipboardCopyObj::DF=0;
 QMap<QString,QString> DwarfClipboardCopyObj::buildCommands= QMap<QString,QString>();
+int DwarfClipboardCopyObj::delay = 100;
 
 DwarfClipboardCopyObj::DwarfClipboardCopyObj(DwarfClipboardCopyObj *parent)
 {
@@ -181,6 +183,7 @@ void DwarfClipboardCopyObj::setName(QString n)
     Name = n;
     for(int itr = 0;itr < images.size();itr++){
         images[itr].setText("name",Name);
+        originalImages[itr].setText("name",Name);
     }
 }
 void DwarfClipboardCopyObj::setComment(QString c)
@@ -188,6 +191,7 @@ void DwarfClipboardCopyObj::setComment(QString c)
     Comment = c;
     for(int itr = 0;itr < images.size();itr++){
         images[itr].setText("comment",Comment);
+        originalImages[itr].setText("comment",Comment);
     }
 }
 void DwarfClipboardCopyObj::getDataFromDF()
@@ -257,17 +261,16 @@ void DwarfClipboardCopyObj::pasteDesignations(cursorIdx location)
 void DwarfClipboardCopyObj::pasteBuildings(cursorIdx location)
 {
     DFHack::WindowIO* IO = DF->getWindowIO();
-    //DFHack::Position* Pos = DF->getPosition();
-    IO->TypeSpecial(DFHack::ESCAPE,1,100);
-    IO->TypeStr("b",100); // enter build menu
+    IO->TypeSpecial(DFHack::WAIT,3,delay);
+    IO->TypeSpecial(DFHack::ESCAPE,1,delay);
+    IO->TypeStr("b",delay); // enter build menu
 
     for(int z = 0;z < build.size();z++){
         for(int y = 0;y < build[z].size();y++){
             for(int x = 0;x < build[z][y].size();x++){
                 if(build[z][y][x] != ""){
-                    IO->TypeStr(build[z][y][x].toLatin1());
+                    IO->TypeStr(build[z][y][x].toLatin1(),delay);
                     cursorIdx temp;
-//                    Pos->getCursorCoords(temp.x,temp.y,temp.z);
                     moveToPoint(location.x+x,location.y+y,location.z-z);
                     IO->TypeSpecial(DFHack::ENTER,2);
                 }
@@ -275,8 +278,6 @@ void DwarfClipboardCopyObj::pasteBuildings(cursorIdx location)
         }
     }
     IO->TypeSpecial(DFHack::ESCAPE);
-    //lastPaste = location;
-//    moveToPoint(location.x+5,location.y,location.z);
 }
 void DwarfClipboardCopyObj::moveToPoint(int x, int y,int z)
 {
@@ -418,4 +419,12 @@ void DwarfClipboardCopyObj::setBuildCommands(QMap<QString,QString> commands)
 cursorIdx DwarfClipboardCopyObj::getPrevPastePoint()
 {
     return prevPaste;
+}
+void DwarfClipboardCopyObj::setDelay(int newDelay)
+{ 
+	delay = newDelay;
+}
+void DwarfClipboardCopyObj::setOrignialToCurrent()
+{
+    originalImages = images;
 }

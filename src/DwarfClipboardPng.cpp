@@ -315,7 +315,7 @@ QImage DwarfClipboardPng::getTileFromScreen(DFHack::t_screen screen)
     QColor foregroundColor = getForegroundColorFromScreen(screen);
     QColor backgroundColor = getBackgroundColorFromScreen(screen);
     QImage tile = tileSet->copy((screen.symbol % 16)*tileWidth,int(screen.symbol/16)*tileHeight,tileWidth,tileHeight);
-    QImage resultImage(tileWidth,tileHeight,QImage::Format_ARGB32_Premultiplied);
+    QImage resultImage(tileWidth,tileHeight,QImage::Format_ARGB32);
     for(int x = 0;x< tile.width();x++){
         for(int y =0;y<tile.height();y++){
             QColor color;

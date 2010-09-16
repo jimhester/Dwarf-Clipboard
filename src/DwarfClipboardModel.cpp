@@ -209,7 +209,6 @@ bool DwarfClipboardModel::dropMimeData(const QMimeData *data,
         {
             DwarfClipboardCopyObj *item;
             in.readRawData((char *)&item,sizeof(item));
-            //if(!((item->parent() == parentItem && item->row() != row))){
             QModelIndex index = createIndex(item->parent()->row(),0,item->parent());
             if(beginMoveRows(index,item->row(),item->row(),parent,insertPt)){
                 item->parent()->removeChildAt(item->row());
@@ -217,10 +216,8 @@ bool DwarfClipboardModel::dropMimeData(const QMimeData *data,
                 parentItem->insertChild(insertPt,item);
                 endMoveRows();
             }
-        //    }
         }
         buffer.close();
-        //insertDataAtPoint(item,insertPt,parentItem);
         return true;
      }
      if (data->hasFormat("image/png"))
@@ -232,7 +229,6 @@ bool DwarfClipboardModel::dropMimeData(const QMimeData *data,
          img.load(&buffer,"PNG");
 		 DwarfClipboardCopyObj* newObj = new DwarfClipboardCopyObj(img);
          insertDataAtPoint(newObj,insertPt,parent);
-//             prependData(newObj);
          return true;
      }
      if(data->hasFormat("text/uri-list"))

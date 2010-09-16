@@ -1,6 +1,7 @@
 #include "inc\DwarfClipboardTableView.h"
 #include "inc\DwarfClipboardCopyObj.h"
-
+#include <QAction>
+#include <QMenu>
 bool DwarfClipboardTableView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
 {
     if(!index.isValid()){
@@ -22,4 +23,15 @@ bool DwarfClipboardTableView::edit ( const QModelIndex & index, EditTrigger trig
         }
         return QAbstractItemView::edit(index,trigger,event);
     }
+}
+void DwarfClipboardTableView::contextMenuEvent ( QContextMenuEvent * event ) 
+{
+    QMenu menu(this);
+    QAction * changeTileset = menu.addAction("Set Original Tileset to Current");
+    QAction * result = menu.exec(event->globalPos());
+    if(result == changeTileset){
+        QModelIndex idx = indexAt(event->pos());
+        DwarfClipboardCopyObj *item = static_cast<DwarfClipboardCopyObj*>(idx.internalPointer());
+        item->setOrignialToCurrent();
+    }    
 }
