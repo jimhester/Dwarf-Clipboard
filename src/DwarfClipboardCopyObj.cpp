@@ -46,8 +46,9 @@ DwarfClipboardCopyObj::DwarfClipboardCopyObj(QImage img,DwarfClipboardCopyObj *p
 }
 void DwarfClipboardCopyObj::recalcImages()
 {   
-    //if(images.empty()) 
-    //    return;
+    if(originalImages.empty()){
+        return;
+    }
     DwarfClipboardPng png;
     images = png.ImagesFromString(originalImages.at(0).text("rawNumbers"));
 }

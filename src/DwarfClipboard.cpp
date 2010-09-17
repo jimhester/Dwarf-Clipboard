@@ -55,13 +55,13 @@ DwarfClipboard::DwarfClipboard()
     heartbeatTimer = new QTimer(this);
     connectedLabel = new QLabel();
 	createConnections();
-	loadConfig();
     recentModel = new DwarfClipboardModel();
     tableViewRecent->setModel(recentModel);
     libraryModel = new DwarfClipboardModel();
     treeViewLibrary->setModel(libraryModel);
 
     connected = connectToDF();
+    loadConfig();
     thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnailSize));
     inputDelayMsLineEdit->setText(QString("%1").arg(inputDelay));
 
@@ -338,6 +338,7 @@ void DwarfClipboard::recalcAllDwarfClipboardCopyObj()
 {
     recalcDwarfClipboardCopyObj(recentModel->getRoot());
     recalcDwarfClipboardCopyObj(libraryModel->getRoot());
+    setupViews();
 }
 void DwarfClipboard::recalcDwarfClipboardCopyObj(DwarfClipboardCopyObj* item)
 {
@@ -352,8 +353,8 @@ void DwarfClipboard::getTilesetPathDf()
     if(!connected)
         return;
     QString tileSetPath = readDFInitFile();
-    QFile DFExe(DF->getProcess()->getPath().c_str());
-    QString newPath = DFExe.fileName().left(DFExe.fileName().lastIndexOf('/')) + "/data/art/" + tileSetPath;
+    QDir DFDir(DF->getProcess()->getPath().c_str());
+    QString newPath = DFDir.path() + "/data/art/" + tileSetPath;
     DwarfClipboardPng::setTileSetPath(newPath);
 	tilesetPathButton->setText(DwarfClipboardPng::getTileSetPath());
     recalcAllDwarfClipboardCopyObj();
@@ -362,8 +363,8 @@ QString DwarfClipboard::readDFInitFile()
 {
     bool windowed = false;
     bool graphics = false;
-    QFile DFExe(DF->getProcess()->getPath().c_str());
-    QString initPath = DFExe.fileName().left(DFExe.fileName().lastIndexOf('/')) + "/data/init/init.txt";
+    QDir DFDir(DF->getProcess()->getPath().c_str());
+    QString initPath = DFDir.path() + "/data/init/init.txt";
     QString windowedFont,fullFont,graphicsFont,graphicsFullFont;
     
     QFile inFile(initPath);
@@ -422,8 +423,8 @@ void DwarfClipboard::getColorPathDf()
 {
     if(!connected)
         return;
-    QFile DFExe(DF->getProcess()->getPath().c_str());
-    QString newPath = DFExe.fileName().left(DFExe.fileName().lastIndexOf('/')) + "/data/init/colors.txt";
+    QDir DFDir(DF->getProcess()->getPath().c_str());
+    QString newPath = DFDir.path() + "/data/init/colors.txt";
     DwarfClipboardPng::setColorPath(newPath);
 	colorPathButton->setText(DwarfClipboardPng::getColorPath());
     recalcAllDwarfClipboardCopyObj();
@@ -803,6 +804,10 @@ void DwarfClipboard::loadConfig()
 			}
         }
         inFile.close();
+    }
+    else{
+        getTilesetPathDf();
+        getColorPathDf();
     }
 }
 

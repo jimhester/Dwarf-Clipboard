@@ -11,7 +11,9 @@ CONFIG  += qxt
 CONFIG += debug
 QXT += core gui globalshortcut
 
-LIBS+=dfhack-debug.lib
-
-
+CONFIG(debug){
+     LIBS = dfhack-debug.lib
+ } else {
+     LIBS = dfhack.lib
+ }
 RC_FILE = DwarfClipboard.rc
