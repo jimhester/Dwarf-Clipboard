@@ -1,0 +1,3 @@
+[submodule "dfhack"]
+	path = dfhack
+	url = git://github.com/belal/dfhack.git
