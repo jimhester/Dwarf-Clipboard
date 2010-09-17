@@ -35,8 +35,8 @@
 #include <QTextStream>
 #define DFHACK_WANT_MISCUTILS
 #define DFHACK_WANT_TILETYPES
-#include "inc/DFHack.h"
-#include "dfhack/modules/WindowIO.h"
+#include "dfhack/library/include/DFHack.h"
+#include "dfhack/library/include/dfhack/modules/WindowIO.h"
 #include "inc/getShortcutDialog.h"
 
 DwarfClipboard::DwarfClipboard()
