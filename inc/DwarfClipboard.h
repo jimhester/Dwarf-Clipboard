@@ -69,7 +69,8 @@ private slots:
     void saveLibrary(QDir current=QDir("library"), DwarfClipboardCopyObj* parent=0);
     void reloadLibrary();
 	void useOriginal(int state);
-    void heartbeat();
+    bool connectToDF();
+    //void heartbeat();
     void setPreviousPos();
 private:
     void createIconGroupBox();
@@ -90,7 +91,7 @@ private:
     void loadBuildCommands();
 
     //DF Stuff
-    bool connectToDF();
+  //  bool connectToDF();
 
     QGroupBox *iconGroupBox;
     QLabel *iconLabel;

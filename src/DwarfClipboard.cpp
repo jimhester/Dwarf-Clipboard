@@ -60,6 +60,10 @@ DwarfClipboard::DwarfClipboard()
     libraryModel = new DwarfClipboardModel();
     treeViewLibrary->setModel(libraryModel);
 
+    DFMgr = NULL;
+    DF = NULL;
+    Pos = NULL;
+
     connected = connectToDF();
     loadConfig();
     thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnailSize));
@@ -98,33 +102,28 @@ DwarfClipboard::DwarfClipboard()
     }
     setupViews();   
 }
-void DwarfClipboard::heartbeat()
+bool DwarfClipboard::connectToDF()
 {
     bool result = true;
-    if(!DF || !DF->isValid()){
+    if(DFMgr && DF && DF->isValid() && DF->getMaps()->Start()){
+        setConnected();
+        return true;
+    }
+    else{
+        if(!DFMgr){
+            DFMgr =new DFHack::ContextManager("Memory.xml");
+        }
         try{
             DFMgr->Refresh();
             DF = DFMgr->getSingleContext();
+            DF->Attach();
+            Pos = DF->getPosition();
+            DF->Resume();
         }
         catch(std::exception& e){};
-        result = false;
     }
-    else{
-
-        try{
-            result = DF->getMaps()->Start();
-        }
-        catch (std::exception& e){
-            result = false;
-        }
-    }
-
-    if(!result){
-        setDisconnected();
-    }
-    else{
-        setConnected();
-    }
+    setDisconnected();
+    return false;
 }
 void DwarfClipboard::setConnected()
 {
@@ -205,7 +204,7 @@ void DwarfClipboard::createConnections()
 
     connect(pushButtonToLibrary,SIGNAL(clicked()),this,SLOT(copyToLibrary()));
 	connect(useOriginalTilesetImagesCheckBox,SIGNAL(stateChanged(int)),this,SLOT(useOriginal(int)));
-    connect(heartbeatTimer,SIGNAL(timeout()),this,SLOT(heartbeat()));
+    connect(heartbeatTimer,SIGNAL(timeout()),this,SLOT(connectToDF()));
 }
 void DwarfClipboard::useOriginal(int state)
 {
@@ -279,6 +278,7 @@ void DwarfClipboard::setupViews()
     tableViewRecent->setIconSize(QSize(thumbnailSize,thumbnailSize));
     tableViewRecent->resizeColumnToContents(0);
     tableViewRecent->resizeRowsToContents();
+    treeViewLibrary->setIconSize(QSize(0,0)); //just done to dirty all the rows so they can be resized
     treeViewLibrary->setIconSize(QSize(thumbnailSize,thumbnailSize));
     treeViewLibrary->resizeColumnToContents(0);
 }
@@ -550,29 +550,38 @@ void DwarfClipboard::loadDirectory(QString directory,DwarfClipboardCopyObj * par
     }
 }
         
-bool DwarfClipboard::connectToDF()
+/*bool DwarfClipboard::connectToDF()
 {
-    try
-    {
-        DFMgr = new DFHack::ContextManager("Memory.xml");
-        DF = DFMgr->getSingleContext(); 
-        DF->Attach();
-        DF->Resume();
-        Pos = DF->getPosition();
-        Pos->Start();
-        Maps = DF->getMaps();
-        if(!DF->getMaps()->Start())
+    if(!DF || !DF->getMaps()->Start()){
+        try
         {
+            DFMgr = new DFHack::ContextManager("Memory.xml");
+            DF = DFMgr->getSingleContext(); 
+            DF->Attach();
+            DF->Resume();
+            Pos = DF->getPosition();
+            Pos->Start();
+            Maps = DF->getMaps();
+            if(!DF->getMaps()->Start())
+            {
+                delete DFMgr;
+                DFMgr = NULL;
+                DF = NULL;
+            
             return false;
         }
     }
     catch (std::exception& e)
     {
-        DF=0;
+        delete DFMgr;
+        DFMgr = NULL;
+        DF = NULL;
+        Pos = NULL;
+        Maps = NULL;
         return false;
     }
     return true;
-}
+}*/
 void DwarfClipboard::setVisible(bool visible)
 {
     minimizeAction->setEnabled(visible);
@@ -833,14 +842,14 @@ void DwarfClipboard::saveAndQuit()
     QFile outFile("config.ini");
     outFile.open(QIODevice::WriteOnly);
     QTextStream out(&outFile);
-    out << "copy;" << copyShortcut->shortcut().toString() << '\n';
-    out << "pasteDesignation;" << pasteDesignationShortcut->shortcut().toString() << '\n';
-    out << "pasteBuilding;" << pasteBuildingShortcut->shortcut().toString() << '\n';
-    out << "setCursorPreviousPaste;" << setCursorToPreviousPasteShortcut->shortcut().toString() << '\n';
-    out << "thumbnailSize;" << thumbnailSize << '\n';
-    out << "inputDelay;" << inputDelay << '\n';
-	out << "tilesetPath;" << DwarfClipboardPng::getTileSetPath() << '\n';
-	out << "colorPath;" << DwarfClipboardPng::getColorPath() << '\n';
+    out << "copy;" << copyShortcut->shortcut().toString() << endl;
+    out << "pasteDesignation;" << pasteDesignationShortcut->shortcut().toString() << endl;
+    out << "pasteBuilding;" << pasteBuildingShortcut->shortcut().toString() << endl;
+    out << "setCursorPreviousPaste;" << setCursorToPreviousPasteShortcut->shortcut().toString() << endl;
+    out << "thumbnailSize;" << thumbnailSize << endl;
+    out << "inputDelay;" << inputDelay << endl;
+	out << "tilesetPath;" << DwarfClipboardPng::getTileSetPath() << endl;
+	out << "colorPath;" << DwarfClipboardPng::getColorPath() << endl;
     outFile.close();
     qApp->quit();
 }
