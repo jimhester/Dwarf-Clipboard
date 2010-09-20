@@ -23,7 +23,7 @@ private:
     void writeImages();
     void setTextForImages();
     void checkDig(int32_t tileType, cursorIdx current, cursorIdx begin);
-    void changeDesignation(DFHack::designations40d *ptr, QChar desig, cursorIdx blockIdx);
+    void changeDesignation(DFHack::designations40d *ptr, dfLocationIterator * itr,const cursorIdx &begin);
     QVector<QVector<QVector<QString > > >dig;
     QVector<QVector<QVector<QString > > >build;
     QList<QImage> images;
@@ -37,10 +37,11 @@ private:
     static DFHack::Context *DF;
 	QList<QImage> originalImages;
     static QMap<QString,QString>buildCommands;
-    cursorIdx prevPaste;
+    cursorIdx pasteLocation;
     void moveToPoint(int x, int y,int z);
     void moveToPoint(cursorIdx location);
     static int delay;
+    QList< int > getBorders(cursorIdx cur);
 public:
     DwarfClipboardCopyObj(DwarfClipboardCopyObj *parent = 0);
     DwarfClipboardCopyObj(cursorIdx c1, cursorIdx c2,DwarfClipboardCopyObj *parent = 0);

@@ -251,8 +251,6 @@ QList< int > DwarfClipboardPng::getBorders(const QVector<QVector<QVector<QString
     for(int y = cur.y -1;y<=cur.y+1;y++){
         for(int x = cur.x+1;x>=cur.x-1;x--){
             if(x != cur.x && y != cur.y){
-//                if(y < 0 || x < 0 || y == dig[cur.z].size() || x == dig[cur.z][y].size()){
-  //              }
                 if(y >= 0 && y < dig[cur.z].size() && x >= 0 && x < dig[cur.z][y].size() && dig[cur.z][y][x] != " "){
                     ret.push_back(pos);
                 }

@@ -120,7 +120,11 @@ bool DwarfClipboard::connectToDF()
             Pos = DF->getPosition();
             DF->Resume();
         }
-        catch(std::exception& e){};
+        catch(std::exception& e){setDisconnected(); return false;};
+        if(DFMgr && DF && DF->isValid() && DF->getMaps()->Start()){
+          setConnected();
+          return true;
+        }
     }
     setDisconnected();
     return false;
@@ -817,6 +821,7 @@ void DwarfClipboard::loadConfig()
     else{
         getTilesetPathDf();
         getColorPathDf();
+        TabWidget->setCurrentIndex(2);
     }
 }
 

@@ -2,6 +2,7 @@
 #include "inc\common.h"
 #include <QPainter>
 #include <QDebug>
+#include <QString>
 
 bool DwarfClipboardCopyObj::useOriginal = false;
 DFHack::Context* DwarfClipboardCopyObj::DF=0;
@@ -16,7 +17,7 @@ DwarfClipboardCopyObj::DwarfClipboardCopyObj(DwarfClipboardCopyObj *parent)
     idx = 0;
     defaultIndex = 0;
 	parentItem = parent;
-    prevPaste.x = prevPaste.y = prevPaste.z = -30000;
+    pasteLocation.x = pasteLocation.y = pasteLocation.z = -30000;
 }
 
 DwarfClipboardCopyObj::DwarfClipboardCopyObj(cursorIdx c1, cursorIdx c2, DwarfClipboardCopyObj *parent)
@@ -28,7 +29,7 @@ DwarfClipboardCopyObj::DwarfClipboardCopyObj(cursorIdx c1, cursorIdx c2, DwarfCl
     idx = 0;
     defaultIndex = 0;
 	parentItem = parent;
-    prevPaste.x = prevPaste.y = prevPaste.z = -30000;
+    pasteLocation.x = pasteLocation.y = pasteLocation.z = -30000;
 }
 DwarfClipboardCopyObj::DwarfClipboardCopyObj(QImage img,DwarfClipboardCopyObj *parent)
 {
@@ -42,7 +43,7 @@ DwarfClipboardCopyObj::DwarfClipboardCopyObj(QImage img,DwarfClipboardCopyObj *p
 	parentItem = parent;
 	originalImages = imageListFromTiledImages(img);
     defaultIndex = 0;
-    prevPaste.x = prevPaste.y = prevPaste.z = -30000;
+    pasteLocation.x = pasteLocation.y = pasteLocation.z = -30000;
 }
 void DwarfClipboardCopyObj::recalcImages()
 {   
@@ -237,8 +238,15 @@ void DwarfClipboardCopyObj::checkDig(int32_t tileType, cursorIdx current, cursor
 }
 void DwarfClipboardCopyObj::pasteDesignations(cursorIdx location)
 {
+    pasteLocation = location;
+    QString digValue;
     Maps = DF->getMaps();
     Maps->Start();
+    DFHack::WindowIO* IO = DF->getWindowIO();
+    IO->TypeSpecial(DFHack::WAIT,3,delay);
+    IO->TypeSpecial(DFHack::ESCAPE,1,delay);
+    IO->TypeStr("b",delay); // enter build menu
+    
     cursorIdx end;
     end.z = location.z-dig.size()+1;
     end.y = location.y+dig[0].size()-1;
@@ -247,17 +255,11 @@ void DwarfClipboardCopyObj::pasteDesignations(cursorIdx location)
     cursorIdx beginning = itr.begin();
     itr.setUpdateDesignations(true);
     DFHack::designations40d *designationPtr = itr.getDesignationHandle();
-    cursorIdx cur = itr.getCurrentPosition();
-    cursorIdx blockPos = itr.getCurrentBlockPos();
-    QChar digValue = dig[beginning.z - cur.z][cur.y-beginning.y][cur.x-beginning.x].at(0);
-    changeDesignation(designationPtr,digValue,blockPos);
+    changeDesignation(designationPtr,&itr,beginning);   
     while(itr.next()){
-        cur = itr.getCurrentPosition();
-        blockPos = itr.getCurrentBlockPos();
-        digValue = dig[beginning.z - cur.z][cur.y-beginning.y][cur.x-beginning.x].at(0);
-        changeDesignation(designationPtr,digValue,blockPos);
+        changeDesignation(designationPtr,&itr,beginning);
     }
-    prevPaste = location;
+    IO->TypeSpecial(DFHack::ESCAPE);
 }
 void DwarfClipboardCopyObj::pasteBuildings(cursorIdx location)
 {
@@ -317,28 +319,56 @@ void DwarfClipboardCopyObj::moveToPoint(cursorIdx location)
     }
 }
                     
-void DwarfClipboardCopyObj::changeDesignation(DFHack::designations40d *ptr, QChar desig, cursorIdx blockIdx)
+void DwarfClipboardCopyObj::changeDesignation(DFHack::designations40d *ptr, dfLocationIterator * itr,const cursorIdx& begin)
 {
-    switch(desig.toAscii())
-    {
-        case 'd':
-            (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_default;
-            break;
-        case 'i':
-            (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_ud_stair;
-            break;
-        case 'u':
-            (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_u_stair;
-            break;
-        case 'j':
-            (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_d_stair;
-            break;
-        case 'r':
-            (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_ramp;
-            break;
-            
+    cursorIdx cur = itr->getCurrentPosition();
+    cursorIdx currentDig;
+    currentDig.x = cur.x-begin.x;
+    currentDig.y = cur.y-begin.y;
+    currentDig.z = begin.z-cur.z;
+    QString digValue = dig[currentDig.z][currentDig.y][currentDig.x];
+    int16_t currentTileType = itr->getCurrentTileType();
+    qDebug() << getBorders(currentDig).size();
+    if(DFHack::isWallTerrain(currentTileType)){
+        cursorIdx blockIdx = itr->getCurrentBlockPos();
+        switch(digValue.at(0).toAscii())
+        {
+            case 'd':
+                (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_default;
+                break;
+            case 'i':
+                (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_ud_stair;
+                break;
+            case 'u':
+                (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_u_stair;
+                break;
+            case 'j':
+                (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_d_stair;
+                break;
+            case 'r':
+                (*ptr)[blockIdx.x][blockIdx.y].bits.dig = DFHack::designation_ramp;
+                break;
+                
+        }
+    }
+    else if(digValue != "d" && (DFHack::isOpenTerrain(currentTileType) || DFHack::isFloorTerrain(currentTileType)) 
+        && getBorders(currentDig).size() >= 1
+    ){
+        DFHack::WindowIO* IO = DF->getWindowIO();
+        IO->TypeStr("C",0,true);
+     //   qDebug() << printDig(';');
+        if(digValue == " "){
+            IO->TypeStr("w",delay);
+        }
+        else{
+            IO->TypeStr(QString(digValue).toAscii(),delay);
+        }
+        moveToPoint(cur.x,cur.y,cur.z);
+        IO->TypeSpecial(DFHack::ENTER,2);
+        IO->TypeSpecial(DFHack::ESCAPE);
     }
 }
+
 QString DwarfClipboardCopyObj::printDig(QChar sep) const
 {
     QString ret;
@@ -419,7 +449,7 @@ void DwarfClipboardCopyObj::setBuildCommands(QMap<QString,QString> commands)
 }
 cursorIdx DwarfClipboardCopyObj::getPrevPastePoint()
 {
-    return prevPaste;
+    return pasteLocation;
 }
 void DwarfClipboardCopyObj::setDelay(int newDelay)
 { 
@@ -428,4 +458,24 @@ void DwarfClipboardCopyObj::setDelay(int newDelay)
 void DwarfClipboardCopyObj::setOrignialToCurrent()
 {
     originalImages = images;
+}
+QList< int > DwarfClipboardCopyObj::getBorders(cursorIdx cur)
+{
+    int pos = 9;
+    QList<int> ret;
+    for(int y = cur.y -1;y<=cur.y+1;y++){
+        for(int x = cur.x+1;x>=cur.x-1;x--){
+            if(x != cur.x || y != cur.y){
+                if(y >= 0 && y < dig[cur.z].size() && x >= 0 && x < dig[cur.z][y].size()){
+                    //qDebug() << pos;
+                    if(dig[cur.z][y][x] != " "){
+                        ret.push_back(pos);
+                    }
+                }
+            }
+            pos--;
+        }
+    }
+//    qDebug() << pos;
+    return(ret);
 }
