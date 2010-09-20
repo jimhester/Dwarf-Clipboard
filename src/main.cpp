@@ -1,4 +1,4 @@
-#include "inc\DwarfClipboard.h"
+#include "DwarfClipboard.h"
 #include <QtGui/QApplication>
 #include <QtGui>
 

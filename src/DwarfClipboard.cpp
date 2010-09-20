@@ -28,16 +28,16 @@
 #include <QtGui>
 #include <QtDebug>
 
-#include "inc/DwarfClipboard.h"
-#include "inc/DwarfClipboardPng.h"
+#include "DwarfClipboard.h"
+#include "DwarfClipboardPng.h"
 #include "ui_DwarfClipboard.h"
 #include <QxtGlobalShortcut>
 #include <QTextStream>
 #define DFHACK_WANT_MISCUTILS
 #define DFHACK_WANT_TILETYPES
-#include "dfhack/library/include/DFHack.h"
-#include "dfhack/library/include/dfhack/modules/WindowIO.h"
-#include "inc/getShortcutDialog.h"
+#include "DFHack.h"
+#include "dfhack/modules/WindowIO.h"
+#include "getShortcutDialog.h"
 
 DwarfClipboard::DwarfClipboard()
 {

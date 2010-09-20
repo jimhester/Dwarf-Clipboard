@@ -1,6 +1,6 @@
-#include "inc\DwarfClipboardTreeView.h"
-#include "inc\DwarfClipboardCopyObj.h"
-#include "inc\DwarfClipboardModel.h"
+#include "../inc/DwarfClipboardTreeView.h"
+#include "../inc/DwarfClipboardCopyObj.h"
+#include "../inc/DwarfClipboardModel.h"
 #include <QMouseEvent>
 #include <QAction>
 #include <QMenu>

@@ -1,7 +1,7 @@
 #pragma once
 
 #define DFHACK_WANT_TILETYPES
-#include "dfhack/library/include/DfHack.h"
+#include "dfhack/library/include/DFHack.h"
 #include "dfhack/library/include/dfhack/modules/WindowIO.h"
 
 struct cursorIdx{

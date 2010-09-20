@@ -568,12 +568,12 @@ Buildings</string>
   <customwidget>
    <class>DwarfClipboardTableView</class>
    <extends>QTableView</extends>
-   <header>DwarfClipboardtableview.h</header>
+   <header>inc/DwarfClipboardTableView.h</header>
   </customwidget>
   <customwidget>
    <class>DwarfClipboardTreeView</class>
    <extends>QTreeView</extends>
-   <header>DwarfClipboardtreeview.h</header>
+   <header>inc/DwarfClipboardTreeView.h</header>
   </customwidget>
  </customwidgets>
  <resources>

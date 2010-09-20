@@ -1,5 +1,5 @@
-#include "inc\DwarfClipboardCopyObj.h"
-#include "inc\common.h"
+#include "../inc/DwarfClipboardCopyObj.h"
+#include "../inc/common.h"
 #include <QPainter>
 #include <QDebug>
 #include <QString>

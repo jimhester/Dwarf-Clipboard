@@ -1,7 +1,7 @@
-#include "inc\DwarfClipboardPng.h"
+#include "../inc/DwarfClipboardPng.h"
 
-#include "inc\DwarfClipboardCopyObj.h"
-#include "inc\dfLocationIterator.h"
+#include "../inc/DwarfClipboardCopyObj.h"
+#include "../inc/dfLocationIterator.h"
 
 #include <QImage>
 #include <QPainter>

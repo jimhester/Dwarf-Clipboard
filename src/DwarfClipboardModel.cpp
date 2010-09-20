@@ -1,4 +1,4 @@
-#include "inc\DwarfClipboardModel.h"
+#include "../inc/DwarfClipboardModel.h"
 #include <QAbstractItemView>
 #include <QAbstractListModel>
 #include <QVariant>

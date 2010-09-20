@@ -1,5 +1,5 @@
-#include "inc\DwarfClipboardTableView.h"
-#include "inc\DwarfClipboardCopyObj.h"
+#include "../inc/DwarfClipboardTableView.h"
+#include "../inc/DwarfClipboardCopyObj.h"
 #include <QAction>
 #include <QMenu>
 bool DwarfClipboardTableView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )

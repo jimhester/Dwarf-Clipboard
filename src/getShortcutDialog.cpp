@@ -1,4 +1,4 @@
-#include "inc/getShortcutDialog.h"
+#include "../inc/getShortcutDialog.h"
 #include <QKeySequence>
 #include <QKeyEvent>
 #include <QLabel>

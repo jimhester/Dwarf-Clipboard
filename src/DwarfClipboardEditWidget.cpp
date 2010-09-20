@@ -1,5 +1,5 @@
-#include "inc/DwarfClipboardEditWidget.h"
-#include "inc/DwarfClipboardCopyObj.h"
+#include "../inc/DwarfClipboardEditWidget.h"
+#include "../inc/DwarfClipboardCopyObj.h"
 #include <QDebug>
 
 DwarfClipboardEditWidget::DwarfClipboardEditWidget(QWidget *parent) : QWidget(parent)

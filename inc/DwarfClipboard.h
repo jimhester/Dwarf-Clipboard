@@ -85,7 +85,7 @@ private:
     void loadDirectory(QString directory=QString("library"),DwarfClipboardCopyObj * parent=0);
     void recalcAllDwarfClipboardCopyObj();
     void recalcDwarfClipboardCopyObj(DwarfClipboardCopyObj* item);
-    QString DwarfClipboard::readDFInitFile();
+    QString readDFInitFile();
     void setConnected();
     void setDisconnected();
     void loadBuildCommands();

@@ -1,4 +1,4 @@
-#include "inc\dfLocationIterator.h"
+#include "inc/dfLocationIterator.h"
 
 dfLocationIterator::dfLocationIterator(cursorIdx start, cursorIdx end,DFHack::Maps* map)
 {
