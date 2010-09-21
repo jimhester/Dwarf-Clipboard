@@ -58,19 +58,19 @@ private slots:
     void getPasteDesignationShortcut();
     void getPasteBuildingShortcut();
     void getSetCursorToPreviousPasteShortcut();
-	void getTilesetPathUser();
-	void getColorPathUser();
-	void getTilesetPathDf();
-	void getColorPathDf();
+    void getTilesetPathUser();
+    void getColorPathUser();
+    void getTilesetPathDf();
+    void getColorPathDf();
     void saveAndQuit();
     void inputDelayChanged();
     void thumbnailSizeChanged();
     void copyToLibrary();
     void saveLibrary(QDir current=QDir("library"), DwarfClipboardCopyObj* parent=0);
     void reloadLibrary();
-	void useOriginal(int state);
+    void useOriginal(int state);
     bool connectToDF();
-    //void heartbeat();
+    void cancel();
     void setPreviousPos();
 private:
     void createIconGroupBox();
@@ -122,6 +122,7 @@ private:
     QxtGlobalShortcut * pasteDesignationShortcut;
     QxtGlobalShortcut * pasteBuildingShortcut;
     QxtGlobalShortcut * setCursorToPreviousPasteShortcut;
+    QxtGlobalShortcut * cancelShortcut;
     int inputDelay;
     int thumbnailSize;
 

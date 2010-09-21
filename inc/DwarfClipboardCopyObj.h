@@ -42,6 +42,8 @@ private:
     void moveToPoint(cursorIdx location);
     static int delay;
     QList< int > getBorders(cursorIdx cur);
+    bool canceled();
+    static bool cancelStatus;
 public:
     DwarfClipboardCopyObj(DwarfClipboardCopyObj *parent = 0);
     DwarfClipboardCopyObj(cursorIdx c1, cursorIdx c2,DwarfClipboardCopyObj *parent = 0);
@@ -79,6 +81,7 @@ public:
     static void setDF(DFHack::Context *tDF);
     static void setBuildCommands(QMap<QString,QString> commands);
     static void setDelay(int newDelay);
+    static void cancel();
     cursorIdx getPrevPastePoint();
     void setOrignialToCurrent();
 };

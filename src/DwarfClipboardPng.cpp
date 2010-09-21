@@ -70,6 +70,7 @@ QList<QImage> DwarfClipboardPng::getImagesForRange(QList<cursorIdx> range)
     size.y = (end.y-begin.y)+1;
     size.z = begin.z-end.z+1;
     cursorIdx oldCursor,oldPosition;
+    START_READ
     Pos->getCursorCoords(oldCursor.x,oldCursor.y,oldCursor.z);
     Pos->getViewCoords(oldPosition.x,oldPosition.y,oldPosition.z);
     Pos->setCursorCoords(-30000,oldCursor.y,oldCursor.z);
@@ -86,8 +87,11 @@ QList<QImage> DwarfClipboardPng::getImagesForRange(QList<cursorIdx> range)
         for(int xIdx = 0;xIdx < int(size.x/effectiveWidth)+1;xIdx++){
             for(int yIdx=0;yIdx < int(size.y/effectiveHeight)+1;yIdx++){
                 Pos->setViewCoords(begin.x+xIdx*effectiveWidth,begin.y+yIdx*effectiveHeight,begin.z-zitr);
+		END_READ
                 Win->TypeSpecial(DFHack::WAIT,1,delay);
+		START_READ
                 Pos->getScreenTiles(screenWidth,screenHeight,screen);
+		END_READ
                 int ylim = effectiveHeight;
                 int xlim = effectiveWidth;
                 if(yIdx == int(size.y/effectiveHeight)){
@@ -112,8 +116,10 @@ QList<QImage> DwarfClipboardPng::getImagesForRange(QList<cursorIdx> range)
         }
         rawComplete.append("|");
     }
+    START_READ
     Pos->setViewCoords(oldPosition.x,oldPosition.y,oldPosition.z);
     Pos->setCursorCoords(oldCursor.x,oldCursor.y,oldCursor.z);
+    END_READ
     retImages = ImagesFromString(rawComplete); // this is a little weird, but it will be easier to only have to debug one way to get the images
     for(int itr = 0;itr<retImages.size();itr++){
         retImages[itr].setText("rawNumbers",rawComplete);

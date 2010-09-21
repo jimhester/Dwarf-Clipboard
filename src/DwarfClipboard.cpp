@@ -54,7 +54,7 @@ DwarfClipboard::DwarfClipboard()
     createShortcuts();
     heartbeatTimer = new QTimer(this);
     connectedLabel = new QLabel();
-	createConnections();
+    createConnections();
     recentModel = new DwarfClipboardModel();
     tableViewRecent->setModel(recentModel);
     libraryModel = new DwarfClipboardModel();
@@ -69,8 +69,8 @@ DwarfClipboard::DwarfClipboard()
     thumbnailSizeLineEdit->setText(QString("%1").arg(thumbnailSize));
     inputDelayMsLineEdit->setText(QString("%1").arg(inputDelay));
 
-	tilesetPathButton->setText(DwarfClipboardPng::getTileSetPath());
-	colorPathButton->setText(DwarfClipboardPng::getColorPath());
+    tilesetPathButton->setText(DwarfClipboardPng::getTileSetPath());
+    colorPathButton->setText(DwarfClipboardPng::getColorPath());
 
     copyShortcutButton->setText(copyShortcut->shortcut());
     pasteDesignationShortcutButton->setText(pasteDesignationShortcut->shortcut());
@@ -105,8 +105,11 @@ DwarfClipboard::DwarfClipboard()
 bool DwarfClipboard::connectToDF()
 {
     bool result = true;
+    START_READ
+    if(DF){ DF->Suspend(); }
     if(DFMgr && DF && DF->isValid() && DF->getMaps()->Start()){
         setConnected();
+	END_READ
         return true;
     }
     else{
@@ -118,15 +121,16 @@ bool DwarfClipboard::connectToDF()
             DF = DFMgr->getSingleContext();
             DF->Attach();
             Pos = DF->getPosition();
-            DF->Resume();
         }
-        catch(std::exception& e){setDisconnected(); return false;};
+        catch(std::exception& e){setDisconnected(); END_READ return false;};
         if(DFMgr && DF && DF->isValid() && DF->getMaps()->Start()){
           setConnected();
+	  END_READ
           return true;
         }
     }
     setDisconnected();
+    END_READ
     return false;
 }
 void DwarfClipboard::setConnected()
@@ -168,6 +172,10 @@ void DwarfClipboard::createShortcuts()
     connect(pasteBuildingShortcut, SIGNAL(activated()), this, SLOT(pasteBuildings()));
     pasteBuildingShortcut->setShortcut(QKeySequence("Ctrl+Shift+B"));
 
+    cancelShortcut = new QxtGlobalShortcut(this);
+    connect(cancelShortcut, SIGNAL(activated()),this,SLOT(cancel()));
+    cancelShortcut->setShortcut(QKeySequence("Ctrl+Shift+E"));
+
     QShortcut* deleteShortcut = new QShortcut(this);
     deleteShortcut->setKey(QKeySequence(QKeySequence::Delete));
     connect(deleteShortcut, SIGNAL(activated()),this,SLOT(deleteSelected()));
@@ -176,7 +184,10 @@ void DwarfClipboard::createShortcuts()
     connect(setCursorToPreviousPasteShortcut,SIGNAL(activated()),this,SLOT(setPreviousPos()));
     setCursorToPreviousPasteShortcut->setShortcut(QKeySequence("Ctrl+Shift+P"));
 }
-
+void DwarfClipboard::cancel()
+{
+  DwarfClipboardCopyObj::cancel();
+}
 void DwarfClipboard::createConnections()
 {
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
@@ -643,6 +654,7 @@ void DwarfClipboard::copy()
 {
     if(!connected)
         return;
+    START_READ
     cursorIdx tempCursor;
     TabWidget->setTabEnabled(0,true);
     if(prevCursor.x == -30000){
@@ -667,6 +679,7 @@ void DwarfClipboard::copy()
             prevCursor.x = -30000;
         }
     }
+    END_READ
 }
 void DwarfClipboard::setPreviousPos()
 {
@@ -692,6 +705,7 @@ void DwarfClipboard::pasteDesignations()
 {
     if(!connected)
         return;
+    START_READ
     QModelIndex idx;
     if(TabWidget->currentIndex() > 1 || TabWidget->currentIndex() < 0){
         return;
@@ -714,6 +728,7 @@ void DwarfClipboard::pasteDesignations()
 			item->pasteDesignations(tempCursor);
 		}
 	}
+	END_READ
 }
 void DwarfClipboard::pasteBuildings()
 {
