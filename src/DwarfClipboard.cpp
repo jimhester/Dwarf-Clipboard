@@ -111,7 +111,7 @@ bool DwarfClipboard::connectToDF()
     }
     else{
         if(!DFMgr){
-            DFMgr =new DFHack::ContextManager("Memory.xml");
+            DFMgr =new DFHack::ContextManager("etc/Memory.xml");
         }
         try{
             DFMgr->Refresh();

@@ -12,6 +12,7 @@ CONFIG += qt
 CONFIG  += qxt
 CONFIG += debug
 QXT += core gui globalshortcut
+    LIBS += -Letc
 win32{
 CONFIG(debug){
      LIBS += dfhack-debug.lib
@@ -21,7 +22,6 @@ CONFIG(debug){
 }
 unix{
     DEFINES+=LINUX_BUILD
-    LIBS += -L./dfhack/output
     CONFIG(debug){
         LIBS += -ldfhack-debug
     }
